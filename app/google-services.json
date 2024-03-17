@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "480566397634",
+    "project_id": "monitoring-api-417403",
+    "storage_bucket": "monitoring-api-417403.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480566397634:android:9cfee23384a22d5f56c95b",
+        "android_client_info": {
+          "package_name": "com.example.parentguide"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbBK1WETET4D8wQlL9uTHpl_x4Jmo6Z7E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
