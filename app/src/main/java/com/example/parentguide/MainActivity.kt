@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,7 +29,13 @@ import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
+    data class BottomNavigationItem(
+        val title: String,
+        val selectedIcon: ImageVector,
+        val unselectedIcon: ImageVector,
+        val hasNews: Boolean,
+        val badgeCount: Int? = null
+    )
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = applicationContext,
@@ -40,6 +47,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ParentGuideTheme {
+
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
