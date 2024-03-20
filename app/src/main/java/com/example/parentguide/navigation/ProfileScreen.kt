@@ -1,4 +1,4 @@
-package com.example.parentguide.profile
+package com.example.parentguide.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,9 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.parentguide.presentaion.signin.UserData
-import androidx.compose.foundation.layout.*
-
-
 
 
 @Composable

@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ParentGuide"
 include(":app")
+include(":kidscare")

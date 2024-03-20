@@ -1,5 +1,6 @@
 package com.example.parentguide
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,7 +14,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -23,19 +23,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.parentguide.presentaion.signin.GoogleAuthUiClient
 import com.example.parentguide.presentaion.signin.SignInScreen
 import com.example.parentguide.presentaion.signin.SignInViewModel
-import com.example.parentguide.profile.ProfileScreen
 import com.example.parentguide.ui.theme.ParentGuideTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    data class BottomNavigationItem(
-        val title: String,
-        val selectedIcon: ImageVector,
-        val unselectedIcon: ImageVector,
-        val hasNews: Boolean,
-        val badgeCount: Int? = null
-    )
+
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = applicationContext,
@@ -61,7 +54,10 @@ class MainActivity : ComponentActivity() {
 
                             LaunchedEffect(key1 = Unit) {
                                 if(googleAuthUiClient.getSignedInUser() != null) {
-                                    navController.navigate("profile")
+//                                    navController.navigate("profile")
+                                    // Navigate to MainActivity2
+                                    startActivity(Intent(this@MainActivity, MainActivity2::class.java))
+                                    finish() // Finish current activity if necessary
                                 }
                             }
 
@@ -87,8 +83,9 @@ class MainActivity : ComponentActivity() {
                                         Toast.LENGTH_LONG
                                     ).show()
 
-                                    navController.navigate("profile")
-                                    viewModel.resetState()
+                                    // Navigate to MainActivity2
+                                    startActivity(Intent(this@MainActivity, MainActivity2::class.java))
+                                    finish() // Finish current activity if necessary
                                 }
                             }
 
@@ -106,23 +103,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("profile") {
-                            ProfileScreen(
-                                userData = googleAuthUiClient.getSignedInUser(),
-                                onSignOut = {
-                                    lifecycleScope.launch {
-                                        googleAuthUiClient.signOut()
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Signed out",
-                                            Toast.LENGTH_LONG
-                                        ).show()
 
-                                        navController.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+
                     }
                 }
             }

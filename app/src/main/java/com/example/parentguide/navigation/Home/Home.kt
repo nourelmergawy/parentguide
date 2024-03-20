@@ -1,4 +1,4 @@
-package com.example.parentguide.presentaion.signin
+package com.example.parentguide.navigation.Home
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -7,10 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,17 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import com.example.parentguide.R
 
 @Composable
-fun SignInScreen(
-    state: SignInState,
-    onSignInClick: () -> Unit
+fun Home (
+    state: HomeState,
+    OncreateKidUserClick: () -> Unit,
+    viewModel : HomeViewModel
 ) {
+
     val context = LocalContext.current
-    LaunchedEffect(key1 = state.signInError) {
-        state.signInError?.let { error ->
+
+    LaunchedEffect(key1 = state.CreateKidUserError) {
+        state.CreateKidUserError?.let { error ->
             Toast.makeText(
                 context,
                 error,
@@ -39,23 +39,25 @@ fun SignInScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().
-        background(color = Color(0xFFBACAE7)),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFFBACAE7)),
+
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        AsyncImage(
-            model = R.drawable.parent_guide_logo_svg,
-            contentDescription = "logo",
+    ) {
+        Button(
+            onClick = { OncreateKidUserClick() },
             modifier = Modifier
-                .size(500.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onSignInClick,
-            modifier = Modifier.wrapContentHeight().width(250.dp)
-            ) {
+                .padding(16.dp), colors = ButtonDefaults.buttonColors(Color(0xFF212A3E))
+        ) {
 
-           Text(text = "Sign in by Google") 
+            Text(text = "Create kid user", color = Color.White)
         }
+        Spacer(modifier = Modifier.height(15.dp))
+
+        CustomItem(viewModel = viewModel)
     }
+
+
 }
