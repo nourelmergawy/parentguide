@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "480566397634",
+    "project_id": "monitoring-api-417403",
+    "storage_bucket": "monitoring-api-417403.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480566397634:android:63bf5c74ae492b1956c95b",
+        "android_client_info": {
+          "package_name": "com.example.kidscare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480566397634-6dhd36530p3j54f332sumclue4kgdlfe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbBK1WETET4D8wQlL9uTHpl_x4Jmo6Z7E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480566397634-6dhd36530p3j54f332sumclue4kgdlfe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480566397634:android:9cfee23384a22d5f56c95b",
+        "android_client_info": {
+          "package_name": "com.example.parentguide"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480566397634-4ugp61evr5ob882s3vrmchfed7c3vj05.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.parentguide",
+            "certificate_hash": "eeb3791fdf765009fe2fa5959ba507c8fc4b62db"
+          }
+        },
+        {
+          "client_id": "480566397634-6dhd36530p3j54f332sumclue4kgdlfe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbBK1WETET4D8wQlL9uTHpl_x4Jmo6Z7E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480566397634-6dhd36530p3j54f332sumclue4kgdlfe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
