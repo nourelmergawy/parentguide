@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.example.kidscare.R
-
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun InstalledAppsList(viewModel: ApplicationManagerViewModel) {
@@ -39,6 +38,7 @@ fun InstalledAppsList(viewModel: ApplicationManagerViewModel) {
     val installedApps = remember {
         packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             .filter { it.packageName != context.packageName }
+            .filterNot { isSystemApp(it) }
     }
 
     LazyColumn {
@@ -50,6 +50,10 @@ fun InstalledAppsList(viewModel: ApplicationManagerViewModel) {
     BackHandler {
         // Handle back button if needed
     }
+}
+
+fun isSystemApp(appInfo: ApplicationInfo): Boolean {
+    return (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
 }
 @Composable
 fun AppItem(appInfo: ApplicationInfo, context: Context) {
