@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.parentguide.Models.KidData
 import com.example.parentguide.R
@@ -79,31 +81,45 @@ fun CustomItem(viewModel: HomeViewModel){
 
     @Composable
     fun CardItem(kidData: KidData) {
+        lateinit var painterGender:AsyncImagePainter
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .padding(10.dp)
+                .width(250.dp)
+                .height(250.dp)
+                .padding(8.dp)
         ) {
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xffA5B6D2))) {
+                Log.d(TAG, "CardItem: ${kidData.gender}")
+                if (kidData.gender == "Male"){
+                     painterGender = rememberImagePainter(R.drawable.boy)
+                }else{
+                     painterGender = rememberImagePainter(R.drawable.girl)
+                }
                 Image(
-                    painter = rememberImagePainter(R.drawable.parent_guide_logo_svg),
-                    modifier = Modifier.fillMaxSize(),
+                    painter = painterGender,
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(200.dp)
+                        .align(Alignment.Center),
                     contentDescription = "My content description",
-                    contentScale = ContentScale.FillWidth
+                    contentScale = ContentScale.FillWidth,
                 )
 
                 Text(
                     text = kidData.username!!,
-                    fontSize = 24.sp,
+                    fontSize = 32.sp,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .background(Color.Gray),
+                        .background(Color.White)
+                        ,
                     textAlign = TextAlign.Center,
-                    color = Color.White
+                    color = Color.Black
                 )
+
             }
 
         }

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.ParentGuide" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.ParentGuide" parent="android:Theme.Material.Light" />
     <!-- Base application theme. -->
-    <style name="Base.Theme.ParentGuide" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Theme.Material3.DayNight.NoActionBar" parent="android:Theme.DeviceDefault.DayNight" tools:targetApi="q">
+    </style>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here -->
     </style>
 </resources>

@@ -4,18 +4,24 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.parentguide.Models.KidData
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -39,34 +46,27 @@ fun CreateKidUser(
     OnCreateClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    { TODO("maxmuim 4 kids") }
-    Column(
+    val user = FirebaseAuth.getInstance().currentUser
+    val uid = user?.uid
+    val databaseReference = FirebaseDatabase.getInstance().getReference("users").child(uid.toString()).child("kidsUsers")
+
+    LazyColumn(
         modifier = Modifier.padding(20.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val username = remember {
-            mutableStateOf(TextFieldValue())
-        }
+        item(1000){
 
-        val password = remember {
-            mutableStateOf(TextFieldValue())
-        }
 
-        val passwordConfirm = remember {
-            mutableStateOf(TextFieldValue())
-        }
-        val age = remember {
-            mutableStateOf(TextFieldValue())
-        }
-
-        val dailyLoginHours = remember {
-            mutableStateOf(TextFieldValue())
-        }
-
-        val intialCoins = remember {
-            mutableStateOf(TextFieldValue())
-        }
+        val username = remember { mutableStateOf(TextFieldValue()) }
+        val password = remember { mutableStateOf(TextFieldValue()) }
+        val passwordConfirm = remember { mutableStateOf(TextFieldValue()) }
+        val age = remember { mutableStateOf(TextFieldValue()) }
+        val dailyLoginHours = remember { mutableStateOf(TextFieldValue()) }
+        val initialCoins = remember { mutableStateOf(TextFieldValue()) }
+        var selectedGender by remember { mutableStateOf("") }
+        val genders = listOf("Male", "Female")
+        var errorMessage by remember { mutableStateOf<String?>(null) }
 
         Text(
             text = "Create Kid User",
@@ -119,54 +119,83 @@ fun CreateKidUser(
 
         TextField(
             label = { Text(text = "Intial Coins") },
-            value = intialCoins.value,
-            onValueChange = { intialCoins.value = it }
+            value = initialCoins.value,
+            onValueChange = { initialCoins.value = it }
         )
 
         Spacer(modifier = Modifier.height(15.dp))
 
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Select Gender")
 
-        val kidUser = KidData(
-            username.value.text,
-            password.value.text,
-            age.value.text,
-            dailyLoginHours.value.text,
-            intialCoins.value.text
-        )
+            genders.forEach { gender ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    RadioButton(
+                        selected = gender == selectedGender,
+                        onClick = { selectedGender = gender }
+                    )
+                    Text(
+                        text = gender,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(15.dp))
 
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
             Button(
                 onClick = {
+                    // Reset error message
+                    errorMessage = null
 
-
-                    val databaseRefrance = FirebaseDatabase.getInstance().getReference("Kids Users")
-                    databaseRefrance.addListenerForSingleValueEvent(object : ValueEventListener {
+                    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(dataSnapshot: DataSnapshot) {
                             val count = dataSnapshot.childrenCount
-                            databaseRefrance.child("Kid ${count+1} }").setValue(kidUser).addOnSuccessListener {
-                                Toast.makeText(context
-                                    ,
-                                    "Created kid user",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                navController.navigate("Home")
 
-                            }.addOnFailureListener {
-                                Toast.makeText(context
-                                    ,
-                                    "faild",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                            // Check for maximum 4 kids
+                            if (count >= 4) {
+                                errorMessage = "Maximum of 4 kids reached"
+                                return
                             }
 
+                            // Validation logic
+                            if (username.value.text.isBlank() || password.value.text.isBlank() || age.value.text.isBlank()) {
+                                errorMessage = "Please fill all the fields"
+                                return
+                            }
+
+                            if (password.value.text != passwordConfirm.value.text) {
+                                errorMessage = "Passwords do not match"
+                                return
+                            }
+
+                            // Create kid user if validation passes
+                            val kidUser = KidData(
+                                username.value.text,
+                                password.value.text,
+                                age.value.text.toIntOrNull() ?: 0, // Ensure age is an integer
+                                dailyLoginHours.value.text.toIntOrNull() ?: 0,
+                                initialCoins.value.text.toIntOrNull() ?: 0,
+                                selectedGender
+
+                            )
+
+                            databaseReference.child("Kid ${count + 1}").setValue(kidUser)
+                                .addOnSuccessListener {
+                                    Toast.makeText(context, "Created kid user", Toast.LENGTH_LONG).show()
+                                    navController.navigate("Home")
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(context, "Failed to create user", Toast.LENGTH_LONG).show()
+                                }
                         }
 
                         override fun onCancelled(databaseError: DatabaseError) {
                             // Handle error
                         }
                     })
-
-                    },
+                },
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,5 +204,11 @@ fun CreateKidUser(
                 Text(text = "Create")
             }
         }
+
+        // Display error message
+        errorMessage?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
     }
+}
 }

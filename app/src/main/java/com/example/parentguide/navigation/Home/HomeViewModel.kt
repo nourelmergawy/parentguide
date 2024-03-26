@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.parentguide.Models.KidData
 import com.example.parentguide.Models.KidResult
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -15,9 +16,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel() : ViewModel() {
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
+    val user = FirebaseAuth.getInstance().currentUser
+    val uid = user?.uid
     fun onKidResult(result: KidResult) {
         _state.update {
             it.copy(
@@ -48,13 +51,14 @@ class HomeViewModel : ViewModel() {
     val response: MutableState<DataState> = mutableStateOf(DataState.Empty)
 
     init {
-        fetchDataFromFirebase()
+        fetchDataFromFirebase(uid.toString())
     }
 
-     fun fetchDataFromFirebase() {
+     fun fetchDataFromFirebase(uid:String) {
         val tempList = mutableListOf<KidData>()
         response.value = DataState.Loading
-        FirebaseDatabase.getInstance().getReference("Kids Users")
+
+        FirebaseDatabase.getInstance().getReference("users").child(uid.toString()).child("kidsUsers")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (DataSnap in snapshot.children) {

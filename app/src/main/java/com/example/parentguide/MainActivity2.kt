@@ -89,6 +89,7 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
     val context = LocalContext.current.applicationContext
 
     val homeViewModel = viewModel<HomeViewModel>()
+
     val stateCreate by homeViewModel.state.collectAsStateWithLifecycle()
 
     val navController = rememberNavController()
