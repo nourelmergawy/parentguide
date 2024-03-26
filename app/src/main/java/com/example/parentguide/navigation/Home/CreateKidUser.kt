@@ -38,6 +38,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.MessageDigest
 
 @Composable
 fun CreateKidUser(
@@ -169,11 +170,11 @@ fun CreateKidUser(
                                 errorMessage = "Passwords do not match"
                                 return
                             }
-
+                            val hashedPassword = hashPassword(password.value.text)
                             // Create kid user if validation passes
                             val kidUser = KidData(
                                 username.value.text,
-                                password.value.text,
+                                hashedPassword,
                                 age.value.text.toIntOrNull() ?: 0, // Ensure age is an integer
                                 dailyLoginHours.value.text.toIntOrNull() ?: 0,
                                 initialCoins.value.text.toIntOrNull() ?: 0,
@@ -211,4 +212,11 @@ fun CreateKidUser(
         }
     }
 }
+
+
+}
+fun hashPassword(password: String): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    val hash = digest.digest(password.toByteArray(Charsets.UTF_8))
+    return hash.joinToString("") { "%02x".format(it) }
 }
