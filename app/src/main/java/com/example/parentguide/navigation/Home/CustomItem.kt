@@ -16,6 +16,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,47 +32,58 @@ import com.example.parentguide.R
 
 @Composable
 fun CustomItem(viewModel: HomeViewModel){
+    val state by viewModel.kidDataStateFlow.collectAsState()
 
-        when (val result = viewModel.response.value) {
-            is DataState.Loading -> {
-                Box(
-                    modifier = Modifier,
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            is DataState.Success -> {
-                ShowLazyList(result.data)
-            }
-            is DataState.Failure -> {
+    when (state) {
+        is DataState.Success -> {
+            val data = (state as DataState.Success<List<KidData>>).data
+            // Display the data
+            ShowLazyList(data)
+        }
+        is DataState.Failure -> {
+            val message = (state as DataState.Failure).message
+
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = result.message,
+                        text = message,
                         fontSize = 24.sp,
                     )
                 }
-            }
-            else -> {
-                Box(
-                    modifier = Modifier,
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Error Fetching data",
-                        fontSize = 24.sp,
-                    )
-                }
+
+        }
+
+        DataState.Loading -> {
+            Box(
+                modifier = Modifier,
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
+        DataState.Empty -> {
+            // Show empty state or initial UI
+        }
+
+        else -> {
+            Box(
+                modifier = Modifier,
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Error Fetching data",
+                    fontSize = 24.sp,
+                )
+            }
+        }
+    }
     }
 
 
     @Composable
-    fun ShowLazyList(kidDatas: MutableList<KidData>) {
+    fun ShowLazyList(kidDatas: List<KidData>) {
         LazyColumn {
             items(kidDatas) { kidData ->
                 Log.d(TAG, "ShowLazyList: ${kidData}")
