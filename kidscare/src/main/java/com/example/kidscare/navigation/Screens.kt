@@ -1,4 +1,4 @@
-package com.example.parentguide.navigation
+package com.example.kidscare.navigation
 
 sealed class Screens (val screen: String){
     data object Home : Screens("home")
@@ -8,7 +8,7 @@ sealed class Screens (val screen: String){
 
     object CreateKidUser : Screens("create_kid_user") // Add this line
     object CustomItem : Screens("customitem") // Add this line
-    object KidHome : Screens("kidHome") // Add this line
+    object KidHome : Screens("KidHome") // Add this line
 
 }
 

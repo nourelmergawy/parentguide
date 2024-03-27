@@ -1,15 +1,16 @@
-package com.example.parentguide.navigation.Home
+package com.example.kidscare.signin
 
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,19 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.kidscare.R
 
 @Composable
-fun Home (
-    state: HomeState,
-    OncreateKidUserClick: () -> Unit,
-    viewModel : HomeViewModel
+fun SignInScreen(
+    state: SignInState,
+    onSignInClick: () -> Unit
 ) {
-
     val context = LocalContext.current
-
-    LaunchedEffect(key1 = state.CreateKidUserError) {
-        state.CreateKidUserError?.let { error ->
+    LaunchedEffect(key1 = state.signInError) {
+        state.signInError?.let { error ->
             Toast.makeText(
                 context,
                 error,
@@ -40,28 +39,23 @@ fun Home (
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color(0xFFBACAE7)),
-
+        modifier = Modifier.fillMaxSize().
+        background(color = Color(0xFFBACAE7)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(
-            onClick = { OncreateKidUserClick() },
+    ){
+        AsyncImage(
+            model = R.drawable.parent_guide_logo_svg,
+            contentDescription = "logo",
             modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-                .wrapContentHeight()
-            , colors = ButtonDefaults.buttonColors(Color(0xFF212A3E))
+                .size(500.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onSignInClick,
+            modifier = Modifier.wrapContentHeight().width(250.dp)
+            ) {
 
-        ) {
-
-            Text(text = "Create kid user", color = Color.White , fontSize = 24.sp, modifier = Modifier.padding(8.dp))
+           Text(text = "Sign in by Google") 
         }
-
-        CustomItem(viewModel = viewModel)
     }
-
-
 }

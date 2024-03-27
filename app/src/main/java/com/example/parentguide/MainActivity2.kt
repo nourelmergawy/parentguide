@@ -37,10 +37,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.parentguide.navigation.Home.CreateKidUser
-import com.example.parentguide.navigation.Home.CustomItem
-import com.example.parentguide.navigation.Home.Home
-import com.example.parentguide.navigation.Home.HomeViewModel
+import com.example.parentguide.navigation.KidUser.CreateKidUser
+import com.example.parentguide.navigation.KidUser.CustomItem
+import com.example.parentguide.navigation.KidUser.Home
+import com.example.parentguide.navigation.KidUser.HomeViewModel
 import com.example.parentguide.navigation.Notification
 import com.example.parentguide.navigation.ProfileScreen
 import com.example.parentguide.navigation.Screens
@@ -208,6 +208,7 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
 
                 CustomItem(viewModel = homeViewModel)
             }
+
         }
 
 

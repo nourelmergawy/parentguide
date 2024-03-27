@@ -1,4 +1,4 @@
-package com.example.parentguide.navigation.Home
+package com.example.parentguide.navigation.KidUser
 
 import androidx.lifecycle.ViewModel
 import com.example.parentguide.Models.KidData

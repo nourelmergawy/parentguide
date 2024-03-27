@@ -1,4 +1,4 @@
-package com.example.parentguide.navigation.Home
+package com.example.parentguide.navigation.KidUser
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement

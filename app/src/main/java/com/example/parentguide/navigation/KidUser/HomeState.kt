@@ -1,4 +1,4 @@
-package com.example.parentguide.navigation.Home
+package com.example.parentguide.navigation.KidUser
 
 data class HomeState (
     val isCreateKidUserSuccessful: Boolean = false,

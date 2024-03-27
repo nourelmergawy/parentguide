@@ -9,9 +9,11 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -51,53 +54,68 @@ fun InstalledAppsList(viewModel: ApplicationManagerViewModel) {
 
     // State to show dialog
     val showDialog = remember { mutableStateOf(false) }
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+                Row(modifier = Modifier.padding(8.dp)){
+                        // Select All button
+                        Button(onClick = { selectedApps.addAll(installedApps) }) {
+                            Text(text = "Select All")
+                        }
 
-    Column {
-        Row(){
-            // Select All button
-            Button(onClick = { selectedApps.addAll(installedApps) }) {
-                Text(text = "Select All")
-            }
+                        // Deselect All button
+                        Button(onClick = { selectedApps.clear() }) {
+                            Text(text = "Deselect All")
+                        }
 
-            // Deselect All button
-            Button(onClick = { selectedApps.clear() }) {
-                Text(text = "Deselect All")
-            }
-        }
-
-        // Button to display selected apps
-        Button(onClick = { showDialog.value = true }) {
-            Text(text = "Show Selected Apps (${selectedApps.size})")
-        }
-
-        // App list
-        LazyColumn {
-            items(installedApps) { app ->
-                AppItem(app, context, selectedApps)
-            }
-        }
-
-
-        // Dialog to display selected apps
-        if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                title = { Text(text = "Selected Apps") },
-                text = {
-                    Column {
-                        selectedApps.forEach { app ->
-                            Text(text = app.packageName)
+                        // Button to display selected apps
+                        Button(onClick = { showDialog.value = true }) {
+                            Text(text = "Show Selected Apps (${selectedApps.size})")
                         }
                     }
-                },
-                confirmButton = {
-                    Button(onClick = { showDialog.value = false }) {
-                        Text(text = "OK")
+                Row (modifier = Modifier.padding(8.dp)){
+                    LazyColumn {
+                        items(installedApps) { app ->
+                            AppItem(app, context, selectedApps)
+                        }
+
                     }
+                    // Select All button
+                    Button(onClick = { selectedApps.addAll(installedApps) }) {
+                        Text(text = "done")
+                    }
+
+                    // Deselect All button
+                    Button(onClick = { selectedApps.clear() }) {
+                        Text(text = "cancel")
+                    }
+
                 }
-            )
+
+
+                // Dialog to display selected apps
+                if (showDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = { showDialog.value = false },
+                        title = { Text(text = "Selected Apps") },
+                        text = {
+                            Column {
+                                selectedApps.forEach { app ->
+                                    Text(text = app.packageName)
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            Button(onClick = { showDialog.value = false }) {
+                                Text(text = "OK")
+                            }
+                        }
+                    )
+                }
+
         }
-    }
 
     BackHandler {
         // Handle back button if needed
