@@ -18,7 +18,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -30,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleCoroutineScope
@@ -46,9 +46,9 @@ import com.example.kidscare.navigation.Home.HomeState
 import com.example.kidscare.navigation.Home.HomeViewModel
 import com.example.kidscare.navigation.Notification
 import com.example.kidscare.navigation.Screens
+import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.permission.ApplicationManagerViewModel
-import com.example.kidscare.ui.theme.ParentGuideTheme
 import com.google.firebase.auth.FirebaseAuth
 
 data class BottomNavigationItem(
@@ -82,11 +82,9 @@ class MainActivity2 : AppCompatActivity() {
         // Fetch installed apps
         applicationManagerViewModel.fetchInstalledApps(this)
         setContent {
-            ParentGuideTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -97,7 +95,6 @@ class MainActivity2 : AppCompatActivity() {
                     MyBottomAppBar( coroutineScope = lifecycleScope,homeViewModel,stateCreate)
 //                    CustomItem(viewModel = homeViewModel)
                 }
-            }
         }
     }
     @Composable
@@ -139,7 +136,7 @@ class MainActivity2 : AppCompatActivity() {
 
         Scaffold(
             bottomBar = {
-                NavigationBar {
+                NavigationBar(containerColor = Color(0xff083A2B)){
                     items.forEachIndexed { index, item ->
                         NavigationBarItem(
                             selected = selectedItemIndex == index,
@@ -179,9 +176,11 @@ class MainActivity2 : AppCompatActivity() {
                 paddingValues ->
             NavHost(navController = navController,
                 startDestination = Screens.Home.screen,
-                modifier = Modifier.padding(paddingValues)) {
+                modifier = Modifier.padding(paddingValues)
+            ) {
                 composable(Screens.Home.screen){
-                    Home(viewModel = homeViewModel)
+                    Home(viewModel = homeViewModel
+                        ,navController)
                 }
                 composable(Screens.Notification.screen){ Notification() }
 //                composable("profile") {
@@ -204,8 +203,12 @@ class MainActivity2 : AppCompatActivity() {
 
 
                 composable(Screens.CustomItem.screen) {
+                    CustomItem(viewModel = homeViewModel, navController = navController)
+                }
 
-                    CustomItem(viewModel = this@MainActivity2.homeViewModel)
+                composable(Screens.QuizScreen.screen) {
+
+                    QuizScreen(quizViewModel)
                 }
 
             }

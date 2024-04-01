@@ -4,6 +4,7 @@ import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.kidscare.Models.KidData
+import com.example.kidscare.navigation.quiz.KidDataRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -49,6 +50,11 @@ class HomeViewModel() : ViewModel() {
                 _kidDataStateFlow.value = DataState.Failure(error.message)
             }
         })
+    }
+    fun fetchKidData(kidData: KidData) {
+        // Simulate fetching data
+        val data = kidData
+        KidDataRepository.setKidData(data)
     }
 }
 

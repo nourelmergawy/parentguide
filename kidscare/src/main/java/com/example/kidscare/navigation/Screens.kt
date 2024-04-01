@@ -6,9 +6,10 @@ sealed class Screens (val screen: String){
 
     data object Profile : Screens("profile")
 
-    object CreateKidUser : Screens("create_kid_user") // Add this line
-    object CustomItem : Screens("customitem") // Add this line
-    object KidHome : Screens("KidHome") // Add this line
+     object CustomItem : Screens("customitem") // Add this line
+     object KidHome : Screens("kidhome") // Add this line
+      object QuizScreen : Screens("kidquiz") // Add this line
+
 
 }
 

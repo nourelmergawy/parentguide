@@ -9,10 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 
 @Composable
 fun Home (
-    viewModel : HomeViewModel
+    viewModel: HomeViewModel,
+    navController: NavController // Add this parameter
 ) {
 
     val context = LocalContext.current
@@ -20,14 +22,16 @@ fun Home (
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFBACAE7)),
+            .background(color = Color(0xFFCDFFF0)),
 
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        CustomItem(viewModel = viewModel)
+        CustomItem(
+            viewModel = viewModel,
+            navController = navController // Pass the navController here,
+
+        )
     }
-
-
 }

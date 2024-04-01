@@ -3,7 +3,7 @@ package com.example.kidscare.navigation.quiz
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.kidscare.navigation.Model.QuizData
+import com.example.kidscare.Models.QuizData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference

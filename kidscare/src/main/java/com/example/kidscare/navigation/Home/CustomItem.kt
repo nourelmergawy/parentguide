@@ -34,22 +34,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.R
+import com.example.kidscare.navigation.Screens
 import java.security.MessageDigest
 
 @Composable
-fun CustomItem(viewModel: HomeViewModel){
+fun CustomItem(viewModel: HomeViewModel, navController: NavController) {
     val state by viewModel.kidDataStateFlow.collectAsState()
-
     when (state) {
         is DataState.Success -> {
             val data = (state as DataState.Success<List<KidData>>).data
             // Display the data
-            Log.d(TAG, "CustomItem: ${data}")
-            ShowLazyList(data)
+            ShowLazyList(data, navController = navController,viewModel)
         }
         is DataState.Failure -> {
             val message = (state as DataState.Failure).message
@@ -94,17 +94,16 @@ fun CustomItem(viewModel: HomeViewModel){
 
 
     @Composable
-    fun ShowLazyList(kidDatas: List<KidData>) {
+    fun ShowLazyList(kidDatas: List<KidData>, navController: NavController,viewModel: HomeViewModel) {
         LazyColumn {
             items(kidDatas) { kidData ->
-                Log.d(TAG, "ShowLazyList: ${kidData}")
-                CardItem(kidData)
+                CardItem(kidData, navController,viewModel)
             }
         }
     }
 
     @Composable
-    fun CardItem(kidData: KidData) {
+    fun CardItem(kidData: KidData, navController: NavController,viewModel: HomeViewModel) {
         lateinit var painterGender:AsyncImagePainter
         // This state controls whether the dialog is shown or not
         var showDialog by remember { mutableStateOf(false) }
@@ -116,7 +115,12 @@ fun CustomItem(viewModel: HomeViewModel){
             onClick = { showDialog = true}
         ) {
             if (showDialog) {
-                PasswordInputDialog(onDismiss = { showDialog = false },kidData )
+                PasswordInputDialog(
+                    onDismiss = { showDialog = false },
+                    kidData = kidData,
+                    navController = navController,
+                    viewModel = viewModel
+                )
             }
             Box(modifier = Modifier
                 .fillMaxSize()
@@ -156,12 +160,18 @@ fun CustomItem(viewModel: HomeViewModel){
         }
     }
 @Composable
-fun PasswordInputDialog(onDismiss: () -> Unit, kidData: KidData) {
+fun PasswordInputDialog(
+    onDismiss: () -> Unit,
+    kidData: KidData,
+    navController: NavController,
+    viewModel: HomeViewModel
+) {
+    val context = LocalContext.current
+
     var password by remember { mutableStateOf("") }
     var isPasswordValid by remember { mutableStateOf(false) }
 
     if (isPasswordValid) {
-        KidHome(isPassword = true, kidData)
         onDismiss()
     } else {
         AlertDialog(
@@ -179,10 +189,19 @@ fun PasswordInputDialog(onDismiss: () -> Unit, kidData: KidData) {
                 Button(
                     onClick = {
                         val hashedPassword = hashPassword(password)
+
                         isPasswordValid = comparePasswored(hashedPassword, kidData.password)
+                        if (isPasswordValid) {
+                            Toast.makeText(context, "correct", Toast.LENGTH_LONG).show()
+                             viewModel.fetchKidData(kidData)
+
+                            navController.navigate(Screens.QuizScreen.screen) // Navigate to QuizScreen
+                        }
                         if (!isPasswordValid) {
                             // Handle wrong password case
                             onDismiss() // Consider whether to dismiss or show an error message
+                            Toast.makeText(context, "wrong", Toast.LENGTH_LONG).show()
+
                         }
                     }
                 ) {
@@ -193,16 +212,7 @@ fun PasswordInputDialog(onDismiss: () -> Unit, kidData: KidData) {
     }
 }
 
-@Composable
-fun KidHome(isPassword: Boolean, kidData: KidData) {
-    val context = LocalContext.current
 
-    if (isPassword) {
-        Toast.makeText(context, "correct", Toast.LENGTH_LONG).show()
-    } else {
-        Toast.makeText(context, "wrong", Toast.LENGTH_LONG).show()
-    }
-}
 fun hashPassword(password: String): String {
     val digest = MessageDigest.getInstance("SHA-256")
     val hash = digest.digest(password.toByteArray(Charsets.UTF_8))

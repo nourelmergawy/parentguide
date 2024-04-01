@@ -1,18 +1,26 @@
 package com.example.kidscare.navigation.quiz
 
+import android.content.ContentValues.TAG
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,104 +32,168 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kidscare.navigation.Model.QuizData
+import coil.compose.AsyncImage
+import com.example.kidscare.Models.KidData
+import com.example.kidscare.Models.QuizData
+import com.example.kidscare.R
 
-@Composable
-fun quiz() {
-    LazyColumn {
-        items(1000) {
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF073A3D)) // Corrected the hex code to include the alpha value as FF for full opacity
-                    .padding(8.dp)
-            ) {
-                Text(text = "quiz Text", fontSize = 24.sp)
-            }
-        }
+object KidDataRepository {
+    private var kidData: KidData? = null
+
+    fun setKidData(data: KidData) {
+        kidData = data
+    }
+
+    fun getKidData(): KidData? {
+        return kidData
     }
 }
 @Composable
-fun QuizScreen(viewModel: QuizViewModel) {
-    // Observe the quiz LiveData from the ViewModel
-    val quizData by viewModel.quiz.observeAsState(initial = null)
-
-    // Load the quiz data
+fun QuizScreen(quizViewModel: QuizViewModel) {
+    val kidData: KidData? = KidDataRepository.getKidData()
+    Log.d(TAG, "QuizScreen: ")
+    val context = LocalContext.current
+    val quizData by quizViewModel.quiz.observeAsState(initial = null)
     LaunchedEffect(true) {
-        viewModel.loadQuiz("1")
+        quizViewModel.loadQuiz("1")
     }
 
-    // Ensure QuizContent can handle nullable quizData
-    if (quizData != null) {
-        QuizContent(quizData)
-    } else {
-        // Show a loading indicator or some placeholder while quizData is null
-        Text("Loading...")
-    }
-}
-@Composable
-fun QuizContent(quizData: QuizData?, modifier: Modifier = Modifier) {
-    // Initialize state for selected option
-    var selectedOption by remember { mutableStateOf("") }
-
-    // Ensure quizData is not null before building the UI
-    quizData?.let { quiz ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = quiz.name ?: "",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(quiz.question ?: "")
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Assuming `answers` is a map and you need to display its values
-            quiz.answers?.values?.let { answers ->
-                OptionsGroup(
-                    options = answers.toList(), // Convert the collection to List
-                    selectedOption = selectedOption,
-                    onOptionSelected = { selectedOption = it }
-                )
+            quizData?.let { quiz ->
+                QuizContent(quiz, kidData!!)
+            } ?: run {
+                Text("Loading...")
             }
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { /* handle send click */ },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Send")
+@Composable
+fun QuizContent(quizData: QuizData?, kidData: KidData) {
+    var selectedOption by remember { mutableStateOf<String?>(null) }
+    val correctAnswer = quizData?.answer ?: ""
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xffCDFFF0))
+        ,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+
+    ) {
+        item {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                TopBar(score = kidData.intialCoins!!, level = 1) // Update these values as needed or make them dynamic
+                // Card for displaying the question
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp), // Add padding around the card
+//                        .background(Color(0xFF1BC4B4)),
+//            elevation = 4.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardColors(Color(0xFF1BC4B4),Color.Black,Color.Cyan,Color.Cyan)
+                ) {
+                    Column {
+                        quizData?.image?.let {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = "Quiz image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp), // Define a height for the image
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        Text(
+                            text = quizData?.question ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .padding(8.dp),
+                            textAlign = TextAlign.Center, // Center the text within the Text composable
+                            lineHeight = 32.sp
+                        )
+                        Log.d(TAG, "QuizContentanswers: ${quizData?.answers}")
+                        Log.d(TAG, "QuizContentData: ${quizData}")
+
+                        quizData?.answers?.values?.forEach { option ->
+                            OptionButton(
+                                option = option,
+                                isSelected = selectedOption == option,
+                                correctAnswer = correctAnswer,
+                                onSelectOption = { selectedOption = it }
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Other content such as the 'Next' button
+                        // ...
+                    }
+                }
             }
         }
-    } ?: run {
-        // Handle the case where quizData is null (e.g., loading state)
-        Text("Loading...", modifier = modifier.padding(16.dp))
     }
 }
+
 @Composable
-fun OptionsGroup(options: List<String>, selectedOption: String, onOptionSelected: (String) -> Unit) {
-    Column {
-        options.forEach { option ->
-            Row(
+fun LevelIndicator(level: Int) {
+    // Here, you can draw the level indicator
+
+}
+
+    @Composable
+fun TopBar(score: Long, level: Int) {
+        Box(
+            contentAlignment = Alignment.Center, // This centers all children in the Box
+            modifier = Modifier
+                .fillMaxWidth() // Takes the full width of the parent
+        ) {
+            // Draw the icon as the bottom layer
+            Image(
+                painter = painterResource(id = R.drawable.ic_trophy),
+                contentDescription = "Score",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = selectedOption == option,
-                    onClick = { onOptionSelected(option) }
-                )
-                Text(text = option, modifier = Modifier.padding(start = 8.dp))
-            }
+                    .size(150.dp), // Define a height for the image
+            )
+
+            // Draw the text on top of the icon, centered
+            Text(
+                text = score.toString(),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                color = Color.White,// Centers the text in the Box, on top of the icon
+                fontSize = 16.sp
+            )
         }
-    }
 }
 
+@Composable
+fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit) {
+    Log.d(TAG, "OptionButton: ${correctAnswer}")
+    Log.d(TAG, "OptionButton: ${option}")
+
+    val backgroundColor = when {
+        isSelected && option == correctAnswer -> Color.Green  // Correct answer
+        isSelected && option != correctAnswer -> Color.Red    // Wrong answer
+        else -> Color.White                                    // Not selected
+    }
+
+    Button(
+        onClick = { onSelectOption(option) },
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text(text = option, modifier = Modifier.padding(16.dp), color = Color.Black)
+    }
+}

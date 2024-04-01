@@ -40,12 +40,12 @@ fun SignInScreen(
 
     Column(
         modifier = Modifier.fillMaxSize().
-        background(color = Color(0xFFBACAE7)),
+        background(color = Color(0xFFCDFFF0)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         AsyncImage(
-            model = R.drawable.parent_guide_logo_svg,
+            model = R.drawable.kides_care,
             contentDescription = "logo",
             modifier = Modifier
                 .size(500.dp)
