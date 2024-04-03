@@ -9,6 +9,8 @@ sealed class Screens (val screen: String){
      object CustomItem : Screens("customitem") // Add this line
      object KidHome : Screens("kidhome") // Add this line
       object QuizScreen : Screens("kidquiz") // Add this line
+    object PermissionScreen : Screens("permission") // Add this line
+
 
 
 }

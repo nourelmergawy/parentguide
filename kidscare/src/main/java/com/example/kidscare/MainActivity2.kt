@@ -50,6 +50,7 @@ import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.permission.ApplicationManagerViewModel
+import com.example.kidscare.permission.InstalledAppsList
 import com.google.firebase.auth.FirebaseAuth
 
 data class BottomNavigationItem(
@@ -98,6 +99,7 @@ class MainActivity2 : AppCompatActivity() {
                 }
         }
     }
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Composable
     fun MyBottomAppBar(
         coroutineScope: LifecycleCoroutineScope,
@@ -212,7 +214,11 @@ class MainActivity2 : AppCompatActivity() {
                 }
                 composable(Screens.KidHome.screen) {
 
-                    homeKidScreen(quizViewModel)
+                    homeKidScreen(quizViewModel,navController)
+                }
+                composable(Screens.PermissionScreen.screen) {
+
+                    InstalledAppsList(applicationManagerViewModel)
                 }
             }
         }
