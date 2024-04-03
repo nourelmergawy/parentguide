@@ -14,7 +14,8 @@ import androidx.navigation.NavController
 @Composable
 fun Home (
     viewModel: HomeViewModel,
-    navController: NavController // Add this parameter
+    navController: NavController, // Add this parameter
+
 ) {
 
     val context = LocalContext.current
@@ -27,6 +28,7 @@ fun Home (
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
 
         CustomItem(
             viewModel = viewModel,

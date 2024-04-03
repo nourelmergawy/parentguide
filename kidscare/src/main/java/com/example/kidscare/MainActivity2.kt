@@ -44,6 +44,7 @@ import com.example.kidscare.navigation.Home.CustomItem
 import com.example.kidscare.navigation.Home.Home
 import com.example.kidscare.navigation.Home.HomeState
 import com.example.kidscare.navigation.Home.HomeViewModel
+import com.example.kidscare.navigation.Home.homeKidScreen
 import com.example.kidscare.navigation.Notification
 import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizScreen
@@ -132,8 +133,6 @@ class MainActivity2 : AppCompatActivity() {
                 hasNews = true,
             ),
         )
-
-
         Scaffold(
             bottomBar = {
                 NavigationBar(containerColor = Color(0xff083A2B)){
@@ -180,7 +179,8 @@ class MainActivity2 : AppCompatActivity() {
             ) {
                 composable(Screens.Home.screen){
                     Home(viewModel = homeViewModel
-                        ,navController)
+                        ,navController = navController
+                       )
                 }
                 composable(Screens.Notification.screen){ Notification() }
 //                composable("profile") {
@@ -210,11 +210,11 @@ class MainActivity2 : AppCompatActivity() {
 
                     QuizScreen(quizViewModel)
                 }
+                composable(Screens.KidHome.screen) {
 
+                    homeKidScreen(quizViewModel)
+                }
             }
-
-
-
         }
     }
 }

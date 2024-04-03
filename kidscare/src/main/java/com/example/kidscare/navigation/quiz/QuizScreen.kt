@@ -37,9 +37,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.R
@@ -180,12 +186,16 @@ fun TopBar(score: Long, level: Int) {
 fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit) {
     Log.d(TAG, "OptionButton: ${correctAnswer}")
     Log.d(TAG, "OptionButton: ${option}")
+    var showDialog by remember { mutableStateOf(false) }
 
-    val backgroundColor = when {
-        isSelected && option == correctAnswer -> Color.Green  // Correct answer
-        isSelected && option != correctAnswer -> Color.Red    // Wrong answer
-        else -> Color.White                                    // Not selected
+    val backgroundColor =when{
+
+        isSelected && option == correctAnswer -> lotteQuizAnimation(true)
+        isSelected && option != correctAnswer -> lotteQuizAnimation(false)
+        else -> Color.White
     }
+           // Correct answer
+                                   // Not selected
 
     Button(
         onClick = { onSelectOption(option) },
@@ -196,4 +206,61 @@ fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onS
     ) {
         Text(text = option, modifier = Modifier.padding(16.dp), color = Color.Black)
     }
+}
+@Composable
+fun lotteQuizAnimation(answer :Boolean):Color{
+
+    if (answer){
+        val composition by rememberLottieComposition(LottieCompositionSpec.Asset("correct.json"))
+            LottieAnimation(
+                composition = composition,
+                iterations = Int.MAX_VALUE,
+                modifier = Modifier.wrapContentSize(),
+            )
+
+
+        return  Color.Green
+    }else{
+        val composition by rememberLottieComposition(LottieCompositionSpec.Asset("wrong.json"))
+        LottieAnimation(
+            composition = composition,
+            iterations = Int.MAX_VALUE,
+            modifier = Modifier.fillMaxSize(),
+            alignment = Alignment.Center,
+            contentScale = ContentScale.FillWidth
+        )
+        return  Color.Red
+    }
+    return  Color.White
+}
+@Composable
+fun SurpriseAnimation(isCorrectAnswer: Boolean) {
+    // Keep track of whether the animation has been played
+    var hasPlayedAnimation by remember { mutableStateOf(false) }
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("correct.json"))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = isCorrectAnswer && !hasPlayedAnimation,
+        restartOnPlay = true
+    )
+
+    // Only play the animation once after the correct answer is chosen
+    LaunchedEffect(isCorrectAnswer) {
+        if (isCorrectAnswer) {
+            hasPlayedAnimation = true
+        }
+    }
+
+    LottieAnimation(
+        composition = composition,
+        progress = progress
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    SurpriseAnimation(isCorrectAnswer = true)
 }

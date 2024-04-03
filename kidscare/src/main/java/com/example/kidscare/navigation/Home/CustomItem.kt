@@ -195,7 +195,7 @@ fun PasswordInputDialog(
                             Toast.makeText(context, "correct", Toast.LENGTH_LONG).show()
                              viewModel.fetchKidData(kidData)
 
-                            navController.navigate(Screens.QuizScreen.screen) // Navigate to QuizScreen
+                            navController.navigate(Screens.KidHome.screen) // Navigate to QuizScreen
                         }
                         if (!isPasswordValid) {
                             // Handle wrong password case

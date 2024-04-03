@@ -13,11 +13,32 @@ import com.google.firebase.database.ValueEventListener
 class QuizViewModel : ViewModel() {
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("quizzes")
     private var _quiz = MutableLiveData<QuizData?>()  // Allow nullability for the initial value
+    val _quizzes = MutableLiveData<List<QuizData>?>()
     val quiz: LiveData<QuizData?> get() = _quiz
+    val quizzes: MutableLiveData<List<QuizData>?> get() = _quizzes
 
     init {
         // Optionally preload data or set an initial state
         _quiz.value = null
+        _quizzes.value = null
+    }
+    fun loadAllQuiz(): MutableLiveData<List<QuizData>?> {
+        databaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val quizzes = mutableListOf<QuizData>()
+                for (childSnapshot in snapshot.children) {
+                    val quiz = childSnapshot.getValue(QuizData::class.java)
+                    quiz?.let { quizzes.add(it) }
+                }
+                _quizzes.value = quizzes
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle possible errors
+            }
+        })
+
+        return _quizzes
     }
 
     fun loadQuiz(quizId: String) {
