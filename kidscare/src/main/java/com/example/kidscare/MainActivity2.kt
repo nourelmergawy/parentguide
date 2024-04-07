@@ -1,9 +1,24 @@
 package com.example.kidscare
 
+import android.app.Activity
+import android.app.AppOpsManager
+import android.app.admin.DevicePolicyManager
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
+import android.os.UserManager
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +56,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.kidscare.navigation.Home.CustomItem
 import com.example.kidscare.navigation.Home.Home
 import com.example.kidscare.navigation.Home.HomeState
@@ -49,9 +68,18 @@ import com.example.kidscare.navigation.Notification
 import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
+import com.example.kidscare.permission.AppLockScreen
+import com.example.kidscare.permission.AppUsageCheckWorker
+import com.example.kidscare.permission.AppUsageViewModel
 import com.example.kidscare.permission.ApplicationManagerViewModel
 import com.example.kidscare.permission.InstalledAppsList
+import com.example.kidscare.permission.LockDeviceCheckWorker
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+import kotlin.collections.set
 
 data class BottomNavigationItem(
     val title: String,
@@ -66,13 +94,50 @@ class MainActivity2 : AppCompatActivity() {
     //    private lateinit var quizViewModel : QuizViewModel
     private lateinit var quizViewModel: QuizViewModel
     private lateinit var homeViewModel: HomeViewModel
+    private val appUsageViewModel: AppUsageViewModel by viewModels {
+        AppUsageViewModel.AppUsageViewModelFactory(
+            this
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activateDeviceAdmin(this)
+        checkAndRequestSystemAlertWindowPermission()
+        scheduleAppUsageCheckWorker()
+//        scheduleDeviceLock()
+        if ( checkUsageStatsPermission() ) {
+            // Implement further app logic here ...
+            var foregroundAppPackageName : String? = null
+            val currentTime = System.currentTimeMillis()
+// The `queryEvents` method takes in the `beginTime` and `endTime` to retrieve the usage events.
+// In our case, beginTime = currentTime - 10 minutes ( 1000 * 60 * 10 milliseconds )
+// and endTime = currentTime
+            val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
+            val usageEvents = usageStatsManager.queryEvents( currentTime - (1000*60*10) , currentTime )
+            val usageEvent = UsageEvents.Event()
+            while ( usageEvents.hasNextEvent() ) {
+                usageEvents.getNextEvent( usageEvent )
+                Log.e( "usageEvent" , "${usageEvent.packageName} ${usageEvent.timeStamp}" )
+            }
+            val ioScope = CoroutineScope(Dispatchers.Unconfined)
+            ioScope.launch {
+                var apps = getNonSystemAppsList()
+                Log.e( "APP-usage" , "${apps.values}" )
+            }
+        }
+        else {
+            // Navigate the user to the permission settings
+            Intent( Settings.ACTION_USAGE_ACCESS_SETTINGS ).apply {
+                startActivity( this )
+            }
+        }
+
         applicationManagerViewModel =
             ViewModelProvider(this).get(ApplicationManagerViewModel::class.java)
-
+        appUsageViewModel.checkAppUsageAndLockIfNeeded("com.whatsapp",1)
         // Observe installedApps LiveData
         applicationManagerViewModel.installedApps.observe(this, Observer { installedAppsPair ->
             val (userAppsList, systemAppsList) = installedAppsPair
@@ -97,7 +162,9 @@ class MainActivity2 : AppCompatActivity() {
                     MyBottomAppBar( coroutineScope = lifecycleScope,homeViewModel,stateCreate)
 //                    CustomItem(viewModel = homeViewModel)
                 }
+//            MainAppScreen(appUsageViewModel)
         }
+
     }
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Composable
@@ -208,9 +275,11 @@ class MainActivity2 : AppCompatActivity() {
                     CustomItem(viewModel = homeViewModel, navController = navController)
                 }
 
-                composable(Screens.QuizScreen.screen) {
-
-                    QuizScreen(quizViewModel)
+                composable("kidquiz/{quizId}") { backStackEntry ->
+                    QuizScreen(
+                        quizViewModel = quizViewModel,
+                        quizId = backStackEntry.arguments?.getString("quizId") ?: ""
+                    )
                 }
                 composable(Screens.KidHome.screen) {
 
@@ -218,9 +287,118 @@ class MainActivity2 : AppCompatActivity() {
                 }
                 composable(Screens.PermissionScreen.screen) {
 
-                    InstalledAppsList(applicationManagerViewModel)
+                    InstalledAppsList(applicationManagerViewModel,applicationContext,appUsageViewModel)
                 }
             }
         }
     }
+    // The `PACKAGE_USAGE_STATS` permission is a not a runtime permission and hence cannot be
+// requested directly using `ActivityCompat.requestPermissions`. All special permissions
+// are handled by `AppOpsManager`.
+    private fun checkUsageStatsPermission() : Boolean {
+        val appOpsManager = getSystemService(AppCompatActivity.APP_OPS_SERVICE) as AppOpsManager
+        // `AppOpsManager.checkOpNoThrow` is deprecated from Android Q
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOpsManager.unsafeCheckOpNoThrow(
+                "android:get_usage_stats",
+                Process.myUid(), packageName
+            )
+        }
+        else {
+            appOpsManager.checkOpNoThrow(
+                "android:get_usage_stats",
+                Process.myUid(), packageName
+            )
+        }
+        return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun getNonSystemAppsList() : Map<String,String> {
+        val appInfos = packageManager.getInstalledApplications( PackageManager.GET_META_DATA )
+        val appInfoMap = HashMap<String,String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val userManager = getSystemService( Context.USER_SERVICE ) as UserManager
+            if ( userManager.isUserUnlocked ) {
+                // Access usage history ...
+                for ( appInfo in appInfos ) {
+                    if ( appInfo.flags != ApplicationInfo.FLAG_SYSTEM ) {
+                        appInfoMap[ appInfo.packageName ]= packageManager.getApplicationLabel( appInfo ).toString()
+                    }
+                }
+            }
+        }else{
+            for ( appInfo in appInfos ) {
+                if ( appInfo.flags != ApplicationInfo.FLAG_SYSTEM ) {
+                    appInfoMap[ appInfo.packageName ]= packageManager.getApplicationLabel( appInfo ).toString()
+                }
+            }
+        }
+        return appInfoMap
+    }
+    @Composable
+    fun EnsureSystemAlertWindowPermission() {
+        val context = LocalContext.current
+
+        // Starting from Android M (6.0, API level 23), you need to check for permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(context)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${context.packageName}")
+                )
+                context.startActivity(intent)
+            }
+        }
+    }
+    private fun checkAndRequestSystemAlertWindowPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
+            }
+        }
+    }
+
+    fun activateDeviceAdmin(context: Context) {
+        val componentName = ComponentName(context, MyDeviceAdminReceiver::class.java)
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+            putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Explanation about what your app will do with device admin privileges.")
+            if (context !is Activity) {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        }
+        context.startActivity(intent)
+    }
+    private fun scheduleAppUsageCheckWorker() {
+        // Define the WorkRequest
+        val checkUsageWorkRequest = PeriodicWorkRequestBuilder<AppUsageCheckWorker>(1, TimeUnit.HOURS)
+            .build()
+
+        // Enqueue the work with WorkManager
+        WorkManager.getInstance(this).enqueue(checkUsageWorkRequest)
+
+    }
+    fun scheduleDeviceLock() {
+        val lockRequest = OneTimeWorkRequestBuilder<LockDeviceCheckWorker>()
+            .setInitialDelay(3, TimeUnit.SECONDS) // Set to 3 minutes delay
+            .build()
+
+        WorkManager.getInstance(this).enqueue(lockRequest)
+    }
+    @Composable
+    fun MainAppScreen(appUsageViewModel: AppUsageViewModel ) {
+        val isLocked = appUsageViewModel.lockScreen.collectAsState().value
+
+        if (isLocked) {
+            AppLockScreen()
+        } else {
+
+        }
+    }
+
+
 }

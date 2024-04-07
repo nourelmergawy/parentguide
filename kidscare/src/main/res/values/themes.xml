@@ -2,5 +2,6 @@
 <resources>
 
     <style name="Theme.ParentGuide" parent="android:Theme.Material.Light.NoActionBar" />
+
     <style name="Theme.KidsCare" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

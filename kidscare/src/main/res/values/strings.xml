@@ -41,5 +41,9 @@
     </string>
     <string name="web_client_id">480566397634-6dhd36530p3j54f332sumclue4kgdlfe.apps.googleusercontent.com</string>
     <string name="title_activity_maps">MapsActivity</string>
-
+    <string name="title_activity_blocked_app">BlockedAppActivity</string>
+    <string name="this_app_is_blocked_by_your_parents">this app is blocked by your parents</string>
+    <string name="admin_receiver_explanation">This app requires device administrator privileges to manage and secure your device.</string>
+    <string name="admin_receiver_description">Description of what your device admin receiver does</string>
+    <string name="admin_receiver_label">Your App Device Admin</string>
 </resources>

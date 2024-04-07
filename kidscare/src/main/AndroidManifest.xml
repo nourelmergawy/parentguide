@@ -5,7 +5,8 @@
     <uses-permission
         android:name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.INTERNET" />
+
+
     <uses-permission android:name="android.permission.INTERNET" /> <!-- This line -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission
@@ -17,6 +18,32 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.GET_TASKS" /> <!-- FOR FOREGROUND APPS BEFORE LOLLIPOP -->
+
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" /> <!-- DONE -->
+    <!-- Permission to install apps -->
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Permission to display over other apps -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Device admin permissions for managing device settings and restrictions -->
+    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
+
+    <!-- Notification access permission -->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+
+    <!-- Storage access permissions for reading/writing to the device's storage -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -25,7 +52,11 @@
         android:roundIcon="@drawable/kides_care"
         android:supportsRtl="true"
         android:theme="@style/Theme.KidsCare">
-
+        <activity
+            android:name=".BlockedAppActivity"
+            android:exported="false"
+            android:label="@string/title_activity_blocked_app"
+            android:theme="@style/Theme.KidsCare" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -41,13 +72,10 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY" />
 
-
         <activity
             android:name=".MainActivity2"
-
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        </activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -59,6 +87,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".MyDeviceAdminReceiver"
+            android:description="@string/admin_receiver_description"
+            android:label="@string/admin_receiver_label"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
+                <!-- Include other actions as needed -->
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

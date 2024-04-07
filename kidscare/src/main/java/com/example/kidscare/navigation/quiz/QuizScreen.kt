@@ -1,6 +1,8 @@
 package com.example.kidscare.navigation.quiz
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,7 +39,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -62,24 +63,25 @@ object KidDataRepository {
     }
 }
 @Composable
-fun QuizScreen(quizViewModel: QuizViewModel) {
+fun QuizScreen(quizViewModel: QuizViewModel,quizId:String) {
+
     val kidData: KidData? = KidDataRepository.getKidData()
     Log.d(TAG, "QuizScreen: ")
     val context = LocalContext.current
     val quizData by quizViewModel.quiz.observeAsState(initial = null)
     LaunchedEffect(true) {
-        quizViewModel.loadQuiz("1")
+        quizViewModel.loadQuiz(quizId)
     }
 
             quizData?.let { quiz ->
-                QuizContent(quiz, kidData!!)
+                QuizContent(quiz, kidData!!,context)
             } ?: run {
                 Text("Loading...")
             }
 }
 
 @Composable
-fun QuizContent(quizData: QuizData?, kidData: KidData) {
+fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context) {
     var selectedOption by remember { mutableStateOf<String?>(null) }
     val correctAnswer = quizData?.answer ?: ""
     LazyColumn(
@@ -207,6 +209,7 @@ fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onS
         Text(text = option, modifier = Modifier.padding(16.dp), color = Color.Black)
     }
 }
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun lotteQuizAnimation(answer :Boolean):Color{
 
@@ -215,7 +218,7 @@ fun lotteQuizAnimation(answer :Boolean):Color{
             LottieAnimation(
                 composition = composition,
                 iterations = Int.MAX_VALUE,
-                modifier = Modifier.wrapContentSize(),
+                modifier = Modifier.fillMaxWidth(),
             )
 
 
@@ -257,10 +260,4 @@ fun SurpriseAnimation(isCorrectAnswer: Boolean) {
         composition = composition,
         progress = progress
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    SurpriseAnimation(isCorrectAnswer = true)
 }

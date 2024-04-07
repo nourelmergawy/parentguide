@@ -44,7 +44,7 @@ fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
         Log.d(ContentValues.TAG, "quizData: ${quizData}")
         LazyColumn {
             item {
-                HorizontalLazyColumn(quiz)
+                HorizontalLazyColumn(quiz,quizViewModel,navController)
                 appPermissions(navController)
 
             }}
@@ -55,7 +55,11 @@ fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
 
 }
 @Composable
-fun HorizontalLazyColumn(quizzes: List<QuizData>?) {
+fun HorizontalLazyColumn(
+    quizzes: List<QuizData>?,
+    quizViewModel: QuizViewModel,
+    navController: NavController
+) {
     Log.d(ContentValues.TAG, "HorizontalLazyColumn: ${quizzes}")
 
             Column (modifier = Modifier
@@ -74,6 +78,7 @@ fun HorizontalLazyColumn(quizzes: List<QuizData>?) {
                     .padding(horizontal = 16.dp)
                     .background((Color(0xffAEFFEB))),) {
                     items(quizzes!!.size) {item ->
+
                         Card(
                             modifier = Modifier
                                 .width(300.dp)
@@ -82,12 +87,17 @@ fun HorizontalLazyColumn(quizzes: List<QuizData>?) {
                                 .background(Color(0xffAEFFEB))
                                 ,
                             shape = RoundedCornerShape(16.dp),
+                            onClick = {
+                                navController.navigate("kidquiz/${item}")
+                            }
 
                             // For more complex coloring, consider using Card's contentColor and other properties
                         ) {
                             Column(modifier = Modifier
                                 .padding(8.dp)
-                                .background(Color(0xffAEFFEB))) {
+                                .background(Color(0xffAEFFEB))
+
+                                ) {
 
                                 quizzes.get(item).image?.let {
                                     AsyncImage(
