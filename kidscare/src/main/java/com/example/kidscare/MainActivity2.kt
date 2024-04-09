@@ -17,6 +17,7 @@ import android.os.Process
 import android.os.UserManager
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
@@ -64,6 +65,7 @@ import com.example.kidscare.navigation.Home.HomeState
 import com.example.kidscare.navigation.Home.HomeViewModel
 import com.example.kidscare.navigation.Home.homeKidScreen
 import com.example.kidscare.navigation.Notification
+import com.example.kidscare.navigation.ProfileScreen
 import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
@@ -72,6 +74,7 @@ import com.example.kidscare.permission.AppUsageCheckWorker
 import com.example.kidscare.permission.AppUsageViewModel
 import com.example.kidscare.permission.ApplicationManagerViewModel
 import com.example.kidscare.permission.InstalledAppsList
+import com.example.kidscare.signin.GoogleAuthUiClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,9 +89,12 @@ data class BottomNavigationItem(
     val badgeCount: Int? = null
 )
 class MainActivity2 : AppCompatActivity() {
+    val googleAuthUiClient by lazy {
+        GoogleAuthUiClient(
+            context = applicationContext,
+        )
+    }
     private lateinit var applicationManagerViewModel: ApplicationManagerViewModel
-
-    //    private lateinit var quizViewModel : QuizViewModel
     private lateinit var quizViewModel: QuizViewModel
     private lateinit var homeViewModel: HomeViewModel
     private val appUsageViewModel: AppUsageViewModel by viewModels {
@@ -154,7 +160,7 @@ class MainActivity2 : AppCompatActivity() {
                     quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
                     homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
                     val stateCreate by homeViewModel.state.collectAsStateWithLifecycle()
-                    MyBottomAppBar( coroutineScope = lifecycleScope,homeViewModel,stateCreate)
+                    MyBottomAppBar(googleAuthUiClient= googleAuthUiClient,coroutineScope = lifecycleScope,homeViewModel,stateCreate)
                 }
 //            MainAppScreen(appUsageViewModel)
         }
@@ -162,10 +168,10 @@ class MainActivity2 : AppCompatActivity() {
     }
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Composable
-    fun MyBottomAppBar(
-        coroutineScope: LifecycleCoroutineScope,
-        homeViewModel: HomeViewModel,
-        stateCreate: HomeState
+    fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
+                       coroutineScope: LifecycleCoroutineScope,
+                       homeViewModel: HomeViewModel,
+                       stateCreate: HomeState
     ) {
         val context = LocalContext.current.applicationContext
 
@@ -246,24 +252,23 @@ class MainActivity2 : AppCompatActivity() {
                        )
                 }
                 composable(Screens.Notification.screen){ Notification() }
-//                composable("profile") {
-//                    ProfileScreen(
-//                        userData = googleAuthUiClient.getSignedInUser(),
-//                        onSignOut = {
-//                            coroutineScope.launch {
-//                                googleAuthUiClient.signOut()
-//                                Toast.makeText(context
-//                                    ,
-//                                    "Signed out",
-//                                    Toast.LENGTH_LONG
-//                                ).show()
-//                                navController.navigate("main")
-//                                navController.popBackStack()
-//                            }
-//                        }
-//                    )
-//                }
-
+                composable(Screens.Profile.screen) {
+                    ProfileScreen(
+                        userData = googleAuthUiClient.getSignedInUser(),
+                        onSignOut = {
+                            coroutineScope.launch {
+                                googleAuthUiClient.signOut()
+                                Toast.makeText(context
+                                    ,
+                                    "Signed out",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                startActivity(Intent(applicationContext, MainActivity::class.java))
+                                finish() // Finish current activity if necessary
+                            }
+                        }
+                    )
+                }
 
                 composable(Screens.CustomItem.screen) {
                     CustomItem(viewModel = homeViewModel, navController = navController)

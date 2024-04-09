@@ -54,8 +54,6 @@ class MainActivity : ComponentActivity() {
 
                             LaunchedEffect(key1 = Unit) {
                                 if(googleAuthUiClient.getSignedInUser() != null) {
-//                                    navController.navigate("profile")
-                                    // Navigate to MainActivity2
                                     startActivity(Intent(this@MainActivity, MainActivity2::class.java))
                                     finish() // Finish current activity if necessary
                                 }

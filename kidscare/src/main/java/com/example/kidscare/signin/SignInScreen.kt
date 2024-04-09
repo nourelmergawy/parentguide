@@ -48,7 +48,7 @@ fun SignInScreen(
             model = R.drawable.kides_care,
             contentDescription = "logo",
             modifier = Modifier
-                .size(500.dp)
+                .size(300.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onSignInClick,
