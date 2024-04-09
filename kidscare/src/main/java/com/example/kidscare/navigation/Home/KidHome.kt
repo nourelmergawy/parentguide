@@ -42,7 +42,9 @@ fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
     }
     quizData?.let { quiz ->
         Log.d(ContentValues.TAG, "quizData: ${quizData}")
-        LazyColumn {
+        LazyColumn (modifier = Modifier
+            .background(Color(0xffCDFFF0))
+            .fillMaxSize()){
             item {
                 HorizontalLazyColumn(quiz,quizViewModel,navController)
                 appPermissions(navController)
@@ -134,7 +136,7 @@ fun appPermissions (navController:NavController){
 
        ){
         Column {
-            Text(text = "Quiz",
+            Text(text = "Permissions",
                 fontSize =32.sp,
                 color = Color(0xff1B2B48),
                 textAlign = TextAlign.Left,

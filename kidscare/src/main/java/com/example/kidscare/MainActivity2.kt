@@ -56,7 +56,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.kidscare.navigation.Home.CustomItem
@@ -73,8 +72,6 @@ import com.example.kidscare.permission.AppUsageCheckWorker
 import com.example.kidscare.permission.AppUsageViewModel
 import com.example.kidscare.permission.ApplicationManagerViewModel
 import com.example.kidscare.permission.InstalledAppsList
-import com.example.kidscare.permission.LockDeviceCheckWorker
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -153,14 +150,11 @@ class MainActivity2 : AppCompatActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
                     quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
-//                    QuizScreen(quizViewModel)
                     homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
                     val stateCreate by homeViewModel.state.collectAsStateWithLifecycle()
                     MyBottomAppBar( coroutineScope = lifecycleScope,homeViewModel,stateCreate)
-//                    CustomItem(viewModel = homeViewModel)
                 }
 //            MainAppScreen(appUsageViewModel)
         }
@@ -278,7 +272,8 @@ class MainActivity2 : AppCompatActivity() {
                 composable("kidquiz/{quizId}") { backStackEntry ->
                     QuizScreen(
                         quizViewModel = quizViewModel,
-                        quizId = backStackEntry.arguments?.getString("quizId") ?: ""
+                        quizId = backStackEntry.arguments?.getString("quizId") ?: "",
+                        navController =navController
                     )
                 }
                 composable(Screens.KidHome.screen) {
@@ -381,13 +376,6 @@ class MainActivity2 : AppCompatActivity() {
         // Enqueue the work with WorkManager
         WorkManager.getInstance(this).enqueue(checkUsageWorkRequest)
 
-    }
-    fun scheduleDeviceLock() {
-        val lockRequest = OneTimeWorkRequestBuilder<LockDeviceCheckWorker>()
-            .setInitialDelay(3, TimeUnit.SECONDS) // Set to 3 minutes delay
-            .build()
-
-        WorkManager.getInstance(this).enqueue(lockRequest)
     }
     @Composable
     fun MainAppScreen(appUsageViewModel: AppUsageViewModel ) {

@@ -1,9 +1,14 @@
 package com.example.kidscare.navigation.quiz
 
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.kidscare.Models.QuizData
+import com.example.kidscare.permission.LockService
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -52,5 +57,13 @@ class QuizViewModel : ViewModel() {
                 // Handle possible errors, maybe set a specific state or log an error
             }
         })
+    }
+    fun handleWrongAnswer(context: Context) {
+        val serviceIntent = Intent(context, LockService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(context, serviceIntent)
+        } else {
+            context.startService(serviceIntent)
+        }
     }
 }

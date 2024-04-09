@@ -13,18 +13,16 @@ class LockDeviceCheckWorker(
 
         val  contextworkerParams  = context
 
-
     override fun doWork(): Result {
-        // Here we would use the actual logic to check app usage and lock the app
-        val maxLockMin = 3 // The maximum allowed usage hours
+        val devicePolicyManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val componentName = ComponentName(applicationContext, MyDeviceAdminReceiver::class.java)
 
-        lockDevice(contextworkerParams)
+        if (devicePolicyManager.isAdminActive(componentName)) {
+            devicePolicyManager.lockNow()
+        }
 
         return Result.success()
     }
-
-
-
     fun lockDevice(context: Context) {
         val devicePolicyManager = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val adminComponent = ComponentName(context, MyDeviceAdminReceiver::class.java)

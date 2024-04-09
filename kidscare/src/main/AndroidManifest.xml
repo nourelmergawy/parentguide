@@ -44,7 +44,7 @@
     <!-- Storage access permissions for reading/writing to the device's storage -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
+    <uses-permission  android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <application
         android:allowBackup="true"
         android:icon="@drawable/kides_care"
@@ -68,6 +68,11 @@
              project's local.properties file (e.g. MAPS_API_KEY=Aiza...), and replace the
              "YOUR_API_KEY" string in this file with "${MAPS_API_KEY}".
         -->
+        <service
+            android:name=".permission.LockService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync">
+        </service>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY" />

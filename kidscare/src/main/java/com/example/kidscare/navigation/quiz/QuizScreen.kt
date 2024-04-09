@@ -41,15 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.R
+import com.example.kidscare.navigation.Screens
 
 object KidDataRepository {
     private var kidData: KidData? = null
@@ -63,8 +64,7 @@ object KidDataRepository {
     }
 }
 @Composable
-fun QuizScreen(quizViewModel: QuizViewModel,quizId:String) {
-
+fun QuizScreen(quizViewModel: QuizViewModel,quizId:String,navController: NavController) {
     val kidData: KidData? = KidDataRepository.getKidData()
     Log.d(TAG, "QuizScreen: ")
     val context = LocalContext.current
@@ -74,14 +74,14 @@ fun QuizScreen(quizViewModel: QuizViewModel,quizId:String) {
     }
 
             quizData?.let { quiz ->
-                QuizContent(quiz, kidData!!,context)
+                QuizContent(quiz, kidData!!,context,navController,quizViewModel)
             } ?: run {
                 Text("Loading...")
             }
 }
 
 @Composable
-fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context) {
+fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navController: NavController,quizViewModel:QuizViewModel) {
     var selectedOption by remember { mutableStateOf<String?>(null) }
     val correctAnswer = quizData?.answer ?: ""
     LazyColumn(
@@ -138,7 +138,9 @@ fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context) {
                                 option = option,
                                 isSelected = selectedOption == option,
                                 correctAnswer = correctAnswer,
-                                onSelectOption = { selectedOption = it }
+                                onSelectOption = { selectedOption = it },
+                                navController = navController,
+                                quizViewModel = quizViewModel
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -185,20 +187,20 @@ fun TopBar(score: Long, level: Int) {
 }
 
 @Composable
-fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit) {
+fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit,navController: NavController,quizViewModel :QuizViewModel) {
     Log.d(TAG, "OptionButton: ${correctAnswer}")
     Log.d(TAG, "OptionButton: ${option}")
-    var showDialog by remember { mutableStateOf(false) }
 
     val backgroundColor =when{
 
-        isSelected && option == correctAnswer -> lotteQuizAnimation(true)
-        isSelected && option != correctAnswer -> lotteQuizAnimation(false)
+        isSelected && option == correctAnswer -> {OpenDialogWithNavigation(navController,true,quizViewModel)
+            Color.Green}
+        isSelected && option != correctAnswer -> {
+            OpenDialogWithNavigation(navController, false,quizViewModel)
+            Color.Red
+        }
         else -> Color.White
     }
-           // Correct answer
-                                   // Not selected
-
     Button(
         onClick = { onSelectOption(option) },
         colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
@@ -211,7 +213,7 @@ fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onS
 }
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun lotteQuizAnimation(answer :Boolean):Color{
+fun lotteQuizAnimation(answer :Boolean){
 
     if (answer){
         val composition by rememberLottieComposition(LottieCompositionSpec.Asset("correct.json"))
@@ -219,45 +221,97 @@ fun lotteQuizAnimation(answer :Boolean):Color{
                 composition = composition,
                 iterations = Int.MAX_VALUE,
                 modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
+
             )
-
-
-        return  Color.Green
     }else{
         val composition by rememberLottieComposition(LottieCompositionSpec.Asset("wrong.json"))
         LottieAnimation(
             composition = composition,
             iterations = Int.MAX_VALUE,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.size(400.dp),
             alignment = Alignment.Center,
             contentScale = ContentScale.FillWidth
         )
-        return  Color.Red
     }
-    return  Color.White
-}
-@Composable
-fun SurpriseAnimation(isCorrectAnswer: Boolean) {
-    // Keep track of whether the animation has been played
-    var hasPlayedAnimation by remember { mutableStateOf(false) }
 
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("correct.json"))
-    val progress by animateLottieCompositionAsState(
-        composition,
-        iterations = LottieConstants.IterateForever,
-        isPlaying = isCorrectAnswer && !hasPlayedAnimation,
-        restartOnPlay = true
-    )
+}@Composable
+fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizViewModel :QuizViewModel) {
+    var showDialog by remember { mutableStateOf(true) }
+    var hasAnswered by remember { mutableStateOf(0) }
+    val context = LocalContext.current
 
-    // Only play the animation once after the correct answer is chosen
-    LaunchedEffect(isCorrectAnswer) {
-        if (isCorrectAnswer) {
-            hasPlayedAnimation = true
+    if (!answer) {
+        hasAnswered++
+    }
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (answer) {
+                    lotteQuizAnimation(true)
+                    Text(
+                        text = "Correct",
+                        fontSize = 62.sp,
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Green
+                    )
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        onClick = {
+                            showDialog = false
+                            hasAnswered = 0  // Reset counter on correct answer
+                            navController.navigate(Screens.KidHome.screen)
+                        }
+                    ) {
+                        Text(
+                            "Go to KidHome",
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    if (hasAnswered > 2) {
+                        Text(
+                            text = "You have reached the maximum number of tries. The phone will be locked for 30m.",
+                            fontSize = 32.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        // Perform your locking action here
+                        // Consider resetting hasAnswered if appropriate
+                    } else {
+                        lotteQuizAnimation(false)
+                        Text(
+                            text = "Incorrect",
+                            fontSize = 32.sp,
+                            color = Color.Red
+                        )
+                        quizViewModel.handleWrongAnswer(context)
+
+                        Button(
+                            onClick = {
+                                showDialog = false
+                            }
+                        ) {
+                            Text(
+                                "Try Again",
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
-    LottieAnimation(
-        composition = composition,
-        progress = progress
-    )
 }
