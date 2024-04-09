@@ -2,6 +2,7 @@ package com.example.kidscare.navigation.Home
 
 import android.content.ContentValues
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,9 +129,19 @@ fun HorizontalLazyColumn(
 
 @Composable
 fun appPermissions (navController:NavController){
+    val context = LocalContext.current
     Column (modifier = Modifier.fillMaxWidth()
         .clickable {
-            navController.navigate(Screens.PermissionScreen.screen)
+            if (android.os.Build.VERSION.SDK_INT < 28) {
+                navController.navigate(Screens.PermissionScreen.screen)
+            }else{
+                Toast.makeText(
+                    context,
+                    "this feature is not supported for your device",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
     },
         horizontalAlignment = Alignment.CenterHorizontally,
 //        verticalArrangement = Arrangement.SpaceEvenly
