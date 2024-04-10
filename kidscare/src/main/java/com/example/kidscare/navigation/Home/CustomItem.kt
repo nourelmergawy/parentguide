@@ -47,6 +47,7 @@ fun CustomItem(viewModel: HomeViewModel, navController: NavController) {
     val state by viewModel.kidDataStateFlow.collectAsState()
     when (state) {
         is DataState.Success -> {
+            Log.d(TAG, "CustomItem: ${(state as DataState.Success<List<KidData>>).data}")
             val data = (state as DataState.Success<List<KidData>>).data
             // Display the data
             ShowLazyList(data, navController = navController,viewModel)
@@ -95,8 +96,11 @@ fun CustomItem(viewModel: HomeViewModel, navController: NavController) {
 
     @Composable
     fun ShowLazyList(kidDatas: List<KidData>, navController: NavController,viewModel: HomeViewModel) {
+        Log.d(TAG, "kidDatas: $kidDatas")
         LazyColumn {
             items(kidDatas) { kidData ->
+                Log.d(TAG, "ShowLazyList: $kidData")
+                
                 CardItem(kidData, navController,viewModel)
             }
         }
@@ -106,6 +110,7 @@ fun CustomItem(viewModel: HomeViewModel, navController: NavController) {
     fun CardItem(kidData: KidData, navController: NavController,viewModel: HomeViewModel) {
         lateinit var painterGender:AsyncImagePainter
         // This state controls whether the dialog is shown or not
+        Log.d(TAG, "CardItem: $kidData")
         var showDialog by remember { mutableStateOf(false) }
         Card(
             modifier = Modifier
@@ -193,8 +198,8 @@ fun PasswordInputDialog(
                         isPasswordValid = comparePasswored(hashedPassword, kidData.password)
                         if (isPasswordValid) {
                             Toast.makeText(context, "correct", Toast.LENGTH_LONG).show()
-                             viewModel.fetchKidData(kidData)
-
+                            Log.d(TAG, "PasswordInputDialog: $kidData")
+                            viewModel.fetchKidData(kidData)
                             navController.navigate(Screens.KidHome.screen) // Navigate to QuizScreen
                         }
                         if (!isPasswordValid) {

@@ -3,8 +3,8 @@ package com.example.kidscare.navigation.Home
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidData
-import com.example.kidscare.navigation.quiz.KidDataRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class HomeViewModel() : ViewModel() {
+
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
 
@@ -53,9 +54,10 @@ class HomeViewModel() : ViewModel() {
     }
     fun fetchKidData(kidData: KidData) {
         // Simulate fetching data
-        val data = kidData
-        KidDataRepository.setKidData(data)
+        Log.d(TAG, "fetchKidData: $kidData")
+        KidDataRepository.setKidData(kidData)
     }
+
 }
 
 

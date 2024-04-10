@@ -6,6 +6,7 @@ import android.app.admin.DevicePolicyManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.ComponentName
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -59,6 +60,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.kidscare.Models.KidData
 import com.example.kidscare.navigation.Home.CustomItem
 import com.example.kidscare.navigation.Home.Home
 import com.example.kidscare.navigation.Home.HomeState
@@ -88,6 +90,18 @@ data class BottomNavigationItem(
     val hasNews: Boolean,
     val badgeCount: Int? = null
 )
+object KidDataRepository {
+    private var kidData: KidData? = null
+
+    fun setKidData(data: KidData) {
+        kidData = data
+        Log.d(ContentValues.TAG, "setKidData: $kidData")
+    }
+
+    fun getKidData(): KidData? {
+        return kidData
+    }
+}
 class MainActivity2 : AppCompatActivity() {
     val googleAuthUiClient by lazy {
         GoogleAuthUiClient(

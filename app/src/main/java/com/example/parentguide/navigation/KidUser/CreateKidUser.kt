@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.parentguide.Models.KidData
+import com.example.parentguide.Models.QuizScore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -43,8 +44,6 @@ import java.security.MessageDigest
 @Composable
 fun CreateKidUser(
     navController: NavHostController,
-    state: HomeState,
-    OnCreateClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val user = FirebaseAuth.getInstance().currentUser
@@ -171,18 +170,23 @@ fun CreateKidUser(
                                 return
                             }
                             val hashedPassword = hashPassword(password.value.text)
+                            // Generate a unique key for the new kid
+                            val uniqueId = databaseReference.push().key ?: return  // Get a unique ID and return if null
+
                             // Create kid user if validation passes
                             val kidUser = KidData(
+                                uniqueId,
                                 username.value.text,
                                 hashedPassword,
                                 age.value.text.toIntOrNull() ?: 0, // Ensure age is an integer
                                 dailyLoginHours.value.text.toIntOrNull() ?: 0,
                                 initialCoins.value.text.toIntOrNull() ?: 0,
-                                selectedGender
-
+                                selectedGender,
+                                quizzes = listOf(QuizScore(score = 0, tryCount = 0)) ,
+                                totalCoins =initialCoins.value.text.toIntOrNull() ?: 0
                             )
 
-                            databaseReference.child("Kid ${count + 1}").setValue(kidUser)
+                            databaseReference.child(uniqueId).setValue(kidUser)
                                 .addOnSuccessListener {
                                     Toast.makeText(context, "Created kid user", Toast.LENGTH_LONG).show()
                                     navController.navigate("Home")

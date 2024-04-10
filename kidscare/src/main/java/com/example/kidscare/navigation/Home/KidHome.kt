@@ -64,6 +64,7 @@ fun HorizontalLazyColumn(
     quizViewModel: QuizViewModel,
     navController: NavController
 ) {
+    val context = LocalContext.current
     Log.d(ContentValues.TAG, "HorizontalLazyColumn: ${quizzes}")
 
             Column (modifier = Modifier
@@ -92,7 +93,20 @@ fun HorizontalLazyColumn(
                                 ,
                             shape = RoundedCornerShape(16.dp),
                             onClick = {
-                                navController.navigate("kidquiz/${item}")
+                                when(quizViewModel.isQuizSolved(item.toString())){
+                                    "solved" ->{
+                                        Toast.makeText(
+                                            context,
+                                            "you already had Solved this Quiz",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    "wrongAnswer" -> navController.navigate("kidquiz/${item}")
+                                    "notSolved" -> navController.navigate("kidquiz/${item}")
+                                }
+
+
+
                             }
 
                             // For more complex coloring, consider using Card's contentColor and other properties
@@ -130,19 +144,22 @@ fun HorizontalLazyColumn(
 @Composable
 fun appPermissions (navController:NavController){
     val context = LocalContext.current
-    Column (modifier = Modifier.fillMaxWidth()
+    Column (modifier = Modifier
+        .fillMaxWidth()
         .clickable {
             if (android.os.Build.VERSION.SDK_INT < 28) {
                 navController.navigate(Screens.PermissionScreen.screen)
-            }else{
-                Toast.makeText(
-                    context,
-                    "this feature is not supported for your device",
-                    Toast.LENGTH_LONG
-                ).show()
+            } else {
+                Toast
+                    .makeText(
+                        context,
+                        "this feature is not supported for your device",
+                        Toast.LENGTH_LONG
+                    )
+                    .show()
             }
 
-    },
+        },
         horizontalAlignment = Alignment.CenterHorizontally,
 //        verticalArrangement = Arrangement.SpaceEvenly
 

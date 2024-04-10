@@ -47,41 +47,40 @@ import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
+import com.example.kidscare.Models.QuizScore
 import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
 
-object KidDataRepository {
-    private var kidData: KidData? = null
 
-    fun setKidData(data: KidData) {
-        kidData = data
-    }
 
-    fun getKidData(): KidData? {
-        return kidData
-    }
-}
 @Composable
 fun QuizScreen(quizViewModel: QuizViewModel,quizId:String,navController: NavController) {
+    Log.d(TAG, "getKidData: ${KidDataRepository.getKidData()}")
+
     val kidData: KidData? = KidDataRepository.getKidData()
-    Log.d(TAG, "QuizScreen: ")
     val context = LocalContext.current
     val quizData by quizViewModel.quiz.observeAsState(initial = null)
+    val getQuizScore by quizViewModel.quizScore.observeAsState(initial = null)
     LaunchedEffect(true) {
         quizViewModel.loadQuiz(quizId)
     }
-
-            quizData?.let { quiz ->
-                QuizContent(quiz, kidData!!,context,navController,quizViewModel)
-            } ?: run {
-                Text("Loading...")
-            }
+    LaunchedEffect(true) {
+      quizViewModel.getQuizScore(quizId)
+    }
+        quizData?.let { quiz ->
+            QuizContent(quiz, kidData!!,context,navController,quizViewModel,quizId,
+                getQuizScore!!
+            )
+        } ?: run {
+            Text("Loading...")
+        }
 }
 
 @Composable
-fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navController: NavController,quizViewModel:QuizViewModel) {
+fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navController: NavController,quizViewModel:QuizViewModel,quizId :String,quizScore: QuizScore) {
     var selectedOption by remember { mutableStateOf<String?>(null) }
     val correctAnswer = quizData?.answer ?: ""
     LazyColumn(
@@ -95,8 +94,7 @@ fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navContr
     ) {
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                TopBar(score = kidData.intialCoins!!, level = 1) // Update these values as needed or make them dynamic
+                TopBar(score = kidData.totalCoins!!.toLong(), level = 1) // Update these values as needed or make them dynamic
                 // Card for displaying the question
                 Card(
                     modifier = Modifier
@@ -140,7 +138,9 @@ fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navContr
                                 correctAnswer = correctAnswer,
                                 onSelectOption = { selectedOption = it },
                                 navController = navController,
-                                quizViewModel = quizViewModel
+                                quizViewModel = quizViewModel,
+                                quizId = quizId,
+                                quizScore = quizScore
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -187,16 +187,16 @@ fun TopBar(score: Long, level: Int) {
 }
 
 @Composable
-fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit,navController: NavController,quizViewModel :QuizViewModel) {
+fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit,navController: NavController,quizViewModel :QuizViewModel,quizId: String,quizScore: QuizScore) {
     Log.d(TAG, "OptionButton: ${correctAnswer}")
     Log.d(TAG, "OptionButton: ${option}")
 
     val backgroundColor =when{
 
-        isSelected && option == correctAnswer -> {OpenDialogWithNavigation(navController,true,quizViewModel)
+        isSelected && option == correctAnswer -> {OpenDialogWithNavigation(navController,true,quizViewModel,quizId,quizScore)
             Color.Green}
         isSelected && option != correctAnswer -> {
-            OpenDialogWithNavigation(navController, false,quizViewModel)
+            OpenDialogWithNavigation(navController, false,quizViewModel,quizId,quizScore)
             Color.Red
         }
         else -> Color.White
@@ -236,14 +236,9 @@ fun lotteQuizAnimation(answer :Boolean){
     }
 
 }@Composable
-fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizViewModel :QuizViewModel) {
+fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizViewModel :QuizViewModel,quizId: String,quizScore: QuizScore) {
     var showDialog by remember { mutableStateOf(true) }
-    var hasAnswered by remember { mutableStateOf(0) }
     val context = LocalContext.current
-
-    if (!answer) {
-        hasAnswered++
-    }
 
     if (showDialog) {
         Dialog(onDismissRequest = { showDialog = false }) {
@@ -255,6 +250,10 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (answer) {
+                    quizViewModel.checkQuizAnswer(
+                        answer= answer,
+                        quizId = quizId,
+                        quizScore =quizScore)
                     lotteQuizAnimation(true)
                     Text(
                         text = "Correct",
@@ -268,7 +267,6 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
                             .padding(16.dp),
                         onClick = {
                             showDialog = false
-                            hasAnswered = 0  // Reset counter on correct answer
                             navController.navigate(Screens.KidHome.screen)
                         }
                     ) {
@@ -279,23 +277,27 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
                         )
                     }
                 } else {
-                    if (hasAnswered > 2) {
+                    Log.d(TAG, "OpenDialogWithNavigation: ${quizScore.tryCount!!}")
+                    if (quizScore.tryCount!! > 1) {
                         Text(
                             text = "You have reached the maximum number of tries. The phone will be locked for 30m.",
                             fontSize = 32.sp,
                             color = Color.White,
                             modifier = Modifier.padding(16.dp)
                         )
+                        quizViewModel.checkQuizAnswer(false,quizId,quizScore)
+                        quizViewModel.handleWrongAnswer(context)
+
                         // Perform your locking action here
                         // Consider resetting hasAnswered if appropriate
                     } else {
                         lotteQuizAnimation(false)
+                        quizViewModel.checkQuizAnswer(false,quizId,quizScore)
                         Text(
                             text = "Incorrect",
                             fontSize = 32.sp,
                             color = Color.Red
                         )
-                        quizViewModel.handleWrongAnswer(context)
 
                         Button(
                             onClick = {
@@ -313,5 +315,4 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
             }
         }
     }
-
 }

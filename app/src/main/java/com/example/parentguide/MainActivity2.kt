@@ -198,10 +198,7 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
             composable(Screens.CreateKidUser.screen) {
                 CreateKidUser(
                     navController,
-                    state = stateCreate,
-                    OnCreateClick = {
 
-                    }
                 )
             }
             composable(Screens.CustomItem.screen) {
@@ -210,8 +207,5 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
             }
 
         }
-
-
-
     }
 }
