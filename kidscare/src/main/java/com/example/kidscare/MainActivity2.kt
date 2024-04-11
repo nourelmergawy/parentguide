@@ -72,9 +72,9 @@ import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.permission.AppLockScreen
-import com.example.kidscare.permission.AppUsageCheckWorker
-import com.example.kidscare.permission.AppUsageViewModel
-import com.example.kidscare.permission.ApplicationManagerViewModel
+import com.example.kidscare.permission.appusage.AppUsageCheckWorker
+import com.example.kidscare.permission.appusage.AppUsageViewModel
+import com.example.kidscare.permission.appblocker.ApplicationManagerViewModel
 import com.example.kidscare.permission.InstalledAppsList
 import com.example.kidscare.signin.GoogleAuthUiClient
 import kotlinx.coroutines.CoroutineScope
@@ -397,7 +397,7 @@ class MainActivity2 : AppCompatActivity() {
 
     }
     @Composable
-    fun MainAppScreen(appUsageViewModel: AppUsageViewModel ) {
+    fun MainAppScreen(appUsageViewModel: AppUsageViewModel) {
         val isLocked = appUsageViewModel.lockScreen.collectAsState().value
 
         if (isLocked) {

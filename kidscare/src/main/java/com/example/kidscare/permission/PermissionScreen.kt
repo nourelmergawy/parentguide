@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.example.kidscare.MyDeviceAdminReceiver
 import com.example.kidscare.R
+import com.example.kidscare.permission.appblocker.ApplicationManagerViewModel
+import com.example.kidscare.permission.appusage.AppUsageViewModel
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
@@ -55,7 +57,6 @@ fun InstalledAppsList(
 
 //    val context = LocalContext.current
     // Create an instance of AppManager with the context
-    val appManager = AppManager(context)
     val packageManager = remember { context.packageManager }
     val installedApps = remember {
         packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
@@ -72,14 +73,10 @@ fun InstalledAppsList(
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Button(onClick = {
-            Log.d(TAG, "isAppDisabled:${appManager.isAppDisabled(selectedApps.get(0).packageName)}")
-//            appManager.disableApp(selectedApps.get(0).packageName)
-            appManager.lockDeviceForDuration()
             Log.d(TAG, "InstalledAppsList:${selectedApps.get(0).packageName}")
             Log.d(TAG, "isDeviceAdminActive: ${isDeviceAdminActive(context = context)}")
 // Wait a moment before checking the disabled status again
             Handler(Looper.getMainLooper()).postDelayed({
-                Log.d(TAG, "isAppDisabled:${appManager.isAppDisabled(selectedApps.get(0).packageName)}")
             }, 1000)  // Delay of 1 second
 
         }) {

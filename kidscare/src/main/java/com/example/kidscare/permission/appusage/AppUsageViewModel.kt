@@ -1,4 +1,4 @@
-package com.example.kidscare.permission
+package com.example.kidscare.permission.appusage
 
 import android.app.usage.UsageStatsManager
 import android.content.Context

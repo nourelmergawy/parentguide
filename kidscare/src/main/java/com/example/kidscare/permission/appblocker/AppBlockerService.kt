@@ -1,4 +1,4 @@
-package com.example.kidscare.permission
+package com.example.kidscare.permission.appblocker
 
 import android.app.ActivityManager
 import android.app.Service
@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.example.kidscare.BlockedAppActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

@@ -1,10 +1,10 @@
-package com.example.kidscare.permission
+package com.example.kidscare.service
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.example.kidscare.BlockedAppActivity
+import com.example.kidscare.permission.appblocker.BlockedAppActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +19,7 @@ class MainForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         blockedAppPackageNames = intent?.getStringArrayListExtra(BLOCKED_APP_PACKAGES_EXTRA) ?: listOf()
-        val blockedAppPackageNames = intent?.getStringArrayListExtra(MainForegroundService.BLOCKED_APP_PACKAGES_EXTRA) ?: listOf()
+        val blockedAppPackageNames = intent?.getStringArrayListExtra(BLOCKED_APP_PACKAGES_EXTRA) ?: listOf()
         Log.d("AppBlockerService", "Blocked apps: $blockedAppPackageNames")
         startAppBlocking()
         return START_STICKY

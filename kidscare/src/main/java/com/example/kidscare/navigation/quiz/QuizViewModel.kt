@@ -13,7 +13,7 @@ import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.Models.QuizScore
-import com.example.kidscare.permission.LockService
+import com.example.kidscare.permission.lockdevice.LockService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
