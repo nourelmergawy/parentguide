@@ -64,13 +64,13 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/teal_200" />
         <activity
-            android:name=".permission.appblocker.BlockedAppActivity"
+            android:name=".navigation.permission.appblocker.BlockedAppActivity"
             android:exported="false"
             android:label="@string/title_activity_blocked_app"
             android:theme="@style/Theme.KidsCare" />
 
         <service
-            android:name=".permission.lockdevice.LockService"
+            android:name=".navigation.permission.lockdevice.LockService"
             android:exported="false"
             android:foregroundServiceType="dataSync">
         </service>
@@ -101,7 +101,7 @@
             </intent-filter>
         </service>
         <receiver
-            android:name=".MyDeviceAdminReceiver"
+            android:name=".service.MyDeviceAdminReceiver"
             android:description="@string/admin_receiver_description"
             android:label="@string/admin_receiver_label"
             android:permission="android.permission.BIND_DEVICE_ADMIN"

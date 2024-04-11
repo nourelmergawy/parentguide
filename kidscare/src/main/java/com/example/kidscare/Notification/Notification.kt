@@ -1,4 +1,4 @@
-package com.example.kidscare.navigation
+package com.example.kidscare.Notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

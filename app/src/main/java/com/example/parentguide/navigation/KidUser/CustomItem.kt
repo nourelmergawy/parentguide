@@ -99,7 +99,8 @@ fun CustomItem(viewModel: HomeViewModel){
             modifier = Modifier
                 .width(250.dp)
                 .height(250.dp)
-                .padding(8.dp)
+                .padding(8.dp),
+                    onClick ={}
         ) {
 
             Box(modifier = Modifier

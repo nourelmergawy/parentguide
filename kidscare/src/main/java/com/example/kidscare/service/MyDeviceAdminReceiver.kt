@@ -1,4 +1,4 @@
-package com.example.kidscare
+package com.example.kidscare.service
 
 import android.app.admin.DeviceAdminReceiver
 import android.content.Context

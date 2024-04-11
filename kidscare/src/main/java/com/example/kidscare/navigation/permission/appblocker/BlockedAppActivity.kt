@@ -1,4 +1,4 @@
-package com.example.kidscare.permission.appblocker
+package com.example.kidscare.navigation.permission.appblocker
 
 import android.os.Bundle
 import android.util.Log
@@ -19,7 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.kidscare.R
-import com.example.kidscare.permission.appblocker.AppBlockerService.Companion.BLOCKED_APP_NAME_EXTRA
+import com.example.kidscare.navigation.permission.appblocker.AppBlockerService.Companion.BLOCKED_APP_NAME_EXTRA
 import com.example.kidscare.service.MainForegroundService.Companion.BLOCKED_APP_PACKAGES_EXTRA
 
 class BlockedAppActivity : ComponentActivity() {

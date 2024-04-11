@@ -22,11 +22,11 @@ class HomeViewModel() : ViewModel() {
     private val dbRef = FirebaseDatabase.getInstance().getReference("users")
 
     init {
-        fetchDataFromFirebase(uid)
+        fetchDataFromFirebase()
     }
 
 
-    private fun fetchDataFromFirebase(uid: String?) {
+    private fun fetchDataFromFirebase() {
         // UID should be retrieved securely and correctly before this function is called.
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val userKidsRef = dbRef.child(uid).child("kidsUsers")
@@ -45,6 +45,17 @@ class HomeViewModel() : ViewModel() {
                 _kidDataStateFlow.value = DataState.Failure(error.message)
             }
         })
+    }
+
+
+    // Function to delete an item from the Firebase Realtime Database
+    fun deleteItemFromFirebase(itemId: String) {
+        
+        // Reference to the specific item you want to delete
+        val itemRef = dbRef.child(itemId)
+
+        // Remove the item from the database
+        itemRef.removeValue()
     }
 }
 

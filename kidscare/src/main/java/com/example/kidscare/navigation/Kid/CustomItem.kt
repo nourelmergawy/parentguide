@@ -1,4 +1,4 @@
-package com.example.kidscare.navigation.Home
+package com.example.kidscare.navigation.Kid
 
 import android.content.ContentValues.TAG
 import android.util.Log
@@ -14,10 +14,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +47,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.R
+import com.example.kidscare.navigation.Home.HomeViewModel
 import com.example.kidscare.navigation.Screens
 import java.security.MessageDigest
 
@@ -174,6 +183,8 @@ fun PasswordInputDialog(
     val context = LocalContext.current
 
     var password by remember { mutableStateOf("") }
+    var isPasswordVisible by remember {  mutableStateOf(false) }
+
     var isPasswordValid by remember { mutableStateOf(false) }
 
     if (isPasswordValid) {
@@ -187,7 +198,26 @@ fun PasswordInputDialog(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Password") },
-                    keyboardOptions = KeyboardOptions.Default.copy(autoCorrect = false)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        val iconImage = if(isPasswordVisible){
+                            Icons.Filled.Visibility
+
+                        } else {
+                            Icons.Filled.VisibilityOff
+                        }
+                        var description = if (isPasswordVisible){
+                            "Hide Password"
+                        } else {
+                            "Show Password"
+                        }
+                        IconButton(onClick = {isPasswordVisible = !isPasswordVisible}) {
+                            Icon(imageVector = iconImage,
+                                contentDescription = description,
+                                )
+                        }
+                    },
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None  else PasswordVisualTransformation()
                 )
             },
             confirmButton = {

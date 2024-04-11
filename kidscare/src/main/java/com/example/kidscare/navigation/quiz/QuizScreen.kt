@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +55,8 @@ import com.example.kidscare.Models.QuizScore
 import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
 
-
-
 @Composable
-fun QuizScreen(quizViewModel: QuizViewModel,quizId:String,navController: NavController) {
+fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavController) {
     Log.d(TAG, "getKidData: ${KidDataRepository.getKidData()}")
 
     val kidData: KidData? = KidDataRepository.getKidData()
@@ -66,21 +65,31 @@ fun QuizScreen(quizViewModel: QuizViewModel,quizId:String,navController: NavCont
     val getQuizScore by quizViewModel.quizScore.observeAsState(initial = null)
     LaunchedEffect(true) {
         quizViewModel.loadQuiz(quizId)
+        quizViewModel.getQuizScore(quizId)
     }
-    LaunchedEffect(true) {
-      quizViewModel.getQuizScore(quizId)
+    quizData?.let { quiz ->
+        QuizContent(
+            quiz,
+            kidData!!,
+            context,
+            navController,
+            quizViewModel,
+            quizId,
+            getQuizScore
+        )
+    } ?: run {
+        Text("Loading...")
     }
-        quizData?.let { quiz ->
-            QuizContent(quiz, kidData!!,context,navController,quizViewModel,quizId,
-                getQuizScore!!
-            )
-        } ?: run {
-            Text("Loading...")
-        }
 }
 
 @Composable
-fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navController: NavController,quizViewModel:QuizViewModel,quizId :String,quizScore: QuizScore) {
+fun QuizContent(
+    quizData: QuizData?, kidData: KidData, context: Context,
+    navController: NavController,
+    quizViewModel:QuizViewModel,
+    quizId:String,
+    quizScore: QuizScore?
+) {
     var selectedOption by remember { mutableStateOf<String?>(null) }
     val correctAnswer = quizData?.answer ?: ""
     LazyColumn(
@@ -132,16 +141,18 @@ fun QuizContent(quizData: QuizData?, kidData: KidData, context: Context,navContr
                         Log.d(TAG, "QuizContentData: ${quizData}")
 
                         quizData?.answers?.values?.forEach { option ->
-                            OptionButton(
-                                option = option,
-                                isSelected = selectedOption == option,
-                                correctAnswer = correctAnswer,
-                                onSelectOption = { selectedOption = it },
-                                navController = navController,
-                                quizViewModel = quizViewModel,
-                                quizId = quizId,
-                                quizScore = quizScore
-                            )
+                            if (quizScore != null) {
+                                OptionButton(
+                                    option = option,
+                                    isSelected = selectedOption == option,
+                                    correctAnswer = correctAnswer,
+                                    onSelectOption = { selectedOption = it },
+                                    navController = navController,
+                                    quizViewModel = quizViewModel,
+                                    quizId = quizId,
+                                    quizScore = quizScore
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         // Other content such as the 'Next' button
@@ -235,13 +246,22 @@ fun lotteQuizAnimation(answer :Boolean){
         )
     }
 
-}@Composable
+}
+@Composable
 fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizViewModel :QuizViewModel,quizId: String,quizScore: QuizScore) {
     var showDialog by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
     if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
+        Dialog(onDismissRequest = {
+            if (answer) {
+                showDialog = false
+                navController.navigate(Screens.KidHome.screen)
+            } else {
+                showDialog = false
+            }
+        }) {
+            val scope = rememberCoroutineScope()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,70 +269,79 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (answer) {
-                    quizViewModel.checkQuizAnswer(
-                        answer= answer,
-                        quizId = quizId,
-                        quizScore =quizScore)
-                    lotteQuizAnimation(true)
-                    Text(
-                        text = "Correct",
-                        fontSize = 62.sp,
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Green
-                    )
-                    Button(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        onClick = {
-                            showDialog = false
-                            navController.navigate(Screens.KidHome.screen)
+
+                    if (answer) {
+                        LaunchedEffect(true) {
+                            quizViewModel.checkQuizAnswer(
+                                answer = answer,
+                                quizId = quizId,
+                                quizScore = quizScore
+                            )
                         }
-                    ) {
+                        lotteQuizAnimation(true)
                         Text(
-                            "Go to KidHome",
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(16.dp)
+                            text = "Correct",
+                            fontSize = 62.sp,
+                            modifier = Modifier.padding(16.dp),
+                            color = Color.Green
                         )
-                    }
-                } else {
-                    Log.d(TAG, "OpenDialogWithNavigation: ${quizScore.tryCount!!}")
-                    if (quizScore.tryCount!! > 1) {
-                        Text(
-                            text = "You have reached the maximum number of tries. The phone will be locked for 30m.",
-                            fontSize = 32.sp,
-                            color = Color.White,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                        quizViewModel.checkQuizAnswer(false,quizId,quizScore)
-                        quizViewModel.handleWrongAnswer(context)
-
-                        // Perform your locking action here
-                        // Consider resetting hasAnswered if appropriate
-                    } else {
-                        lotteQuizAnimation(false)
-                        quizViewModel.checkQuizAnswer(false,quizId,quizScore)
-                        Text(
-                            text = "Incorrect",
-                            fontSize = 32.sp,
-                            color = Color.Red
-                        )
-
                         Button(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             onClick = {
                                 showDialog = false
+                                navController.navigate(Screens.KidHome.screen)
                             }
                         ) {
                             Text(
-                                "Try Again",
+                                "Go to KidHome",
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(16.dp)
                             )
+
+                        }
+                    } else {
+                        Log.d(TAG, "OpenDialogWithNavigation: ${quizScore.tryCount!!}")
+                        if (quizScore.tryCount!! > 2) {
+                            val max_tries =
+                                "You have reached the maximum number of tries. The phone will be locked for 3m."
+                            Text(
+                                text = max_tries,
+                                fontSize = 32.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            LaunchedEffect(true) {
+                                quizViewModel.checkQuizAnswer(false, quizId, quizScore)
+                            }
+                            quizViewModel.lockDeviceNotification(context, max_tries)
+                            quizViewModel.handleWrongAnswer(context)
+                        } else {
+                            lotteQuizAnimation(false)
+                            LaunchedEffect(true) {
+                                quizViewModel.checkQuizAnswer(false, quizId, quizScore)
+                            }
+                            Text(
+                                text = "Incorrect",
+                                fontSize = 32.sp,
+                                color = Color.Red
+                            )
+
+                            Button(
+                                onClick = {
+                                    showDialog = false
+                                }
+                            ) {
+                                Text(
+                                    "Try Again",
+                                    fontSize = 24.sp,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
-}

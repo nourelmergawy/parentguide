@@ -1,5 +1,6 @@
 package com.example.kidscare.navigation.quiz
 
+import MyFirebaseMessagingService
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
@@ -13,15 +14,23 @@ import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.Models.QuizScore
-import com.example.kidscare.permission.lockdevice.LockService
+import com.example.kidscare.navigation.permission.lockdevice.LockService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class QuizViewModel : ViewModel() {
+    private val myFirebaseMessagingService = MyFirebaseMessagingService()
+
     private var databaseReference: DatabaseReference =
         FirebaseDatabase.getInstance().getReference("quizzes")
     private var _quiz = MutableLiveData<QuizData?>()  // Allow nullability for the initial value
@@ -80,88 +89,117 @@ class QuizViewModel : ViewModel() {
             context.startService(serviceIntent)
         }
     }
-    fun getQuizScore(quizId: String?){
-        when(isQuizSolved(quizId)){
-            "notSolved" -> {
-                _quizScore.value = QuizScore(0, 0, "notSolved")
+    suspend fun getQuizScore(quizId: String?) {
+        try {
+            val solvedStatus = isQuizSolved(quizId)
+            when (solvedStatus) {
+                "notSolved" -> {
+                    _quizScore.value = QuizScore(0, 0, "notSolved")
+                }
+                "solved", "wrongAnswer" -> {
+                    val kidData = KidDataRepository.getKidData()
+                    val quiz = kidData?.quizzes?.get(quizId?.toIntOrNull() ?: -1)
+                    if (quiz != null) {
+                        _quizScore.value = quiz
+                    } else {
+                        // Quiz not found, handle the error accordingly
+                        _quizScore.value = QuizScore(0, 0, "notSolved")
+                    }
+                }
+                else -> {
+                    // Handle other cases
+                    _quizScore.value = QuizScore(0, 0, "notSolved")
+                }
             }
-            "solved" -> {
-                _quizScore.value = KidDataRepository.getKidData()?.quizzes?.get(quizId!!.toInt())!!
-            }
-            "wrongAnswer" -> {
-                _quizScore.value = KidDataRepository.getKidData()?.quizzes?.get(quizId!!.toInt())!!
-            }
-            else ->  _quizScore.value = QuizScore(0,0,"notSolved")
+        } catch (e: Exception) {
+            // Handle exception
+            _quizScore.value = QuizScore(0, 0, "notSolved")
         }
-
     }
-    fun isQuizSolved(quizId: String?) :String {
+    // Define a suspend function to fetch quiz solved status
+    suspend fun isQuizSolved(quizId: String?): String = withContext(Dispatchers.IO) {
         val user = FirebaseAuth.getInstance().currentUser
         val uid = user?.uid
-        var isQuizSolved = "notSolved"
         val kidData: KidData? = KidDataRepository.getKidData()
-        val getKidId : String? = kidData?.uid
+        val getKidId: String? = kidData?.uid
+        var quizSolved = ""
         Log.d(TAG, "isQuizSolved: $getKidId")
-        // UID should be retrieved securely and correctly before this function is called.
         val userKidsRef =
             userDBRef.child(uid.toString()).child("kidsUsers").child(getKidId!!).child("quizzes")
-        // Now, check for a specific quiz ID under each user's quizzes
-        userKidsRef.get().addOnSuccessListener { quizzesSnapshot ->
-            if (quizzesSnapshot.hasChild(quizId!!)) {
-                if(quizzesSnapshot.child(quizId!!).child("hasSolved").value == true){
-                    Log.d("QuizViewModel", "User has quiz ID $quizId ")
-                    isQuizSolved = "solved"
-                }else{
-                    isQuizSolved = "wrongAnswer"
+
+        // Use suspendCoroutine to convert the Firebase API to a suspend function
+        suspendCoroutine<String> { continuation ->
+            userKidsRef.child(quizId!!).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    // Extract the QuizScore object directly from the snapshot if it exists
+                    val quizScore = dataSnapshot.getValue(QuizScore::class.java)
+
+                    quizSolved = if (quizScore?.hasSolved == "solved") {
+                        Log.d("QuizViewModel", "User has quiz ID $quizId and it is solved")
+                        "solved"
+                    } else {
+                        Log.d("QuizViewModel", "User has quiz ID $quizId but it has wrong answers or not attempted")
+                        "wrongAnswer"
+                    }
+
+                    // Resume the coroutine with the quizSolved value
+                    continuation.resume(quizSolved)
+                }
+
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Log.d("QuizViewModel", "Error checking quizzes for user", databaseError.toException())
+                    quizSolved = "Error"
+                    // Resume the coroutine with an exception
+                    continuation.resumeWithException(databaseError.toException())
+                }
+            })
+        }
+    }
+
+    suspend fun checkQuizAnswer(answer: Boolean, quizId: String?, quizScore: QuizScore) {
+        try {
+            val user = FirebaseAuth.getInstance().currentUser
+            val uid = user?.uid
+            val kidData: KidData? = KidDataRepository.getKidData()
+            val getKidId: String? = kidData?.uid
+            val userKidsRef: DatabaseReference = userDBRef.child(uid.toString()).child("kidsUsers").child(getKidId!!).child("quizzes")
+            Log.d(TAG, "checkQuizAnswer: $getKidId")
+
+            if (answer) {
+                when (isQuizSolved(quizId)) {
+                    "wrongAnswer" -> {
+                        quizScore.score = 5
+                        quizScore.tryCount = quizScore.tryCount
+                        quizScore.hasSolved = "solved"
+                        userKidsRef.child(quizId!!).setValue(quizScore).await()
+                    }
+                    "notSolved" -> {
+                        quizScore.score = 10
+                        quizScore.tryCount = 0
+                        quizScore.hasSolved = "solved"
+                        userKidsRef.child(quizId!!).setValue(quizScore).await()
+                    }
                 }
             } else {
-                Log.d("QuizViewModel", "User  does not have quiz ID $quizId")
-                isQuizSolved = "notSolved"
-            }
-        }.addOnFailureListener { e ->
-            Log.d("QuizViewModel", "Error checking quizzes for user", e)
-            isQuizSolved = "Error"
-        }
-        return isQuizSolved
-    }
-
-    fun checkQuizAnswer(answer :Boolean,quizId: String?,quizScore: QuizScore){
-        val user = FirebaseAuth.getInstance().currentUser
-        val uid = user?.uid
-        val kidData: KidData? = KidDataRepository.getKidData()
-        val getKidId : String? = kidData?.uid
-        val userKidsRef =
-            userDBRef.child(uid.toString()).child("kidsUsers").child(getKidId!!).child("quizzes")
-        Log.d(TAG, "checkQuizAnswer:${getKidId} ")
-//        val quizScore = QuizScore(0,0,false)
-        if (answer){
-            when (isQuizSolved(quizId)){
-                "wrongAnswer "-> {
-                    quizScore.score = 5
-                    quizScore.tryCount = quizScore.tryCount
-                    quizScore.hasSolved = "solved"
-                    userKidsRef.setValue(listOf(quizScore))
-                }
-                "notSolved" ->{
-                    quizScore.score = 10
-                    quizScore.tryCount = 0
-                    quizScore.hasSolved = "solved"
-                    userKidsRef.setValue(listOf(quizScore))
-                }
-                }
-            }else{
-                if ( quizScore.tryCount!! > 0) {
-
+                if (quizScore.tryCount!! > 0) {
                     quizScore.score = 5
                     quizScore.tryCount = quizScore.tryCount?.plus(1)
                     quizScore.hasSolved = "wrongAnswer"
-                    userKidsRef.setValue(listOf(quizScore))
-                }else{
+                    userKidsRef.child(quizId!!).setValue(quizScore).await()
+                } else {
                     quizScore.score = 5
                     quizScore.tryCount = 1
                     quizScore.hasSolved = "wrongAnswer"
-                    userKidsRef.setValue(listOf(quizScore))
+                    userKidsRef.child(quizId!!).setValue(quizScore).await()
                 }
+            }
+        } catch (e: Exception) {
+            // Handle the exception
+            Log.e(TAG, "Error checking quiz answer: $e")
         }
+    }
+    fun lockDeviceNotification(context: Context,notificationText:String?){
+        myFirebaseMessagingService.showNotification(context,notificationText)
     }
 }

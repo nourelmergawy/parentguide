@@ -1,4 +1,4 @@
-package com.example.kidscare.navigation.Home
+package com.example.kidscare.navigation.Kid
 
 sealed class DataState<out T> {
     data class Success<T>(val data: T) : DataState<T>()

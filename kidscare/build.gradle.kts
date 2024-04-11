@@ -84,12 +84,10 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.android.gms:play-services-auth:19.2.0")
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.4")
     implementation("io.coil-kt:coil-compose:2.6.0")
-
     implementation ("com.airbnb.android:lottie-compose:5.0.3")
-
+    implementation("androidx.compose.material:material-icons-extended")
 
 }

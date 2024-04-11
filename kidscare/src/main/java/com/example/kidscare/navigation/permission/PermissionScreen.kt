@@ -1,4 +1,4 @@
-package com.example.kidscare.permission
+package com.example.kidscare.navigation.permission
 
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
@@ -43,10 +43,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import com.example.kidscare.MyDeviceAdminReceiver
+import com.example.kidscare.service.MyDeviceAdminReceiver
 import com.example.kidscare.R
-import com.example.kidscare.permission.appblocker.ApplicationManagerViewModel
-import com.example.kidscare.permission.appusage.AppUsageViewModel
+import com.example.kidscare.navigation.permission.appblocker.ApplicationManagerViewModel
+import com.example.kidscare.navigation.permission.appusage.AppUsageViewModel
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable

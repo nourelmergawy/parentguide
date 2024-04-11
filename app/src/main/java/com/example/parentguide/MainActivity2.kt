@@ -16,7 +16,6 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -45,7 +44,6 @@ import com.example.parentguide.navigation.Notification
 import com.example.parentguide.navigation.ProfileScreen
 import com.example.parentguide.navigation.Screens
 import com.example.parentguide.presentaion.signin.GoogleAuthUiClient
-import com.example.parentguide.ui.theme.ParentGuideTheme
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
 
@@ -68,11 +66,9 @@ class MainActivity2 : AppCompatActivity() {
             )
         }
         setContent {
-            ParentGuideTheme {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
                 ) {
                     MyBottomAppBar(googleAuthUiClient, coroutineScope = lifecycleScope)
 
@@ -80,7 +76,7 @@ class MainActivity2 : AppCompatActivity() {
             }
         }
     }
-}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,

@@ -1,4 +1,4 @@
-package com.example.kidscare.permission
+package com.example.kidscare.navigation.permission
 
 
 

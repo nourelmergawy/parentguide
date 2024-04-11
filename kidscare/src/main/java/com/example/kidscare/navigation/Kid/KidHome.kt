@@ -1,6 +1,8 @@
-package com.example.kidscare.navigation.Home
+package com.example.kidscare.navigation.Kid
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -34,6 +36,9 @@ import com.example.kidscare.Models.QuizData
 import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
 import com.example.kidscare.navigation.quiz.QuizViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
@@ -58,6 +63,7 @@ fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
 
 
 }
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun HorizontalLazyColumn(
     quizzes: List<QuizData>?,
@@ -65,7 +71,7 @@ fun HorizontalLazyColumn(
     navController: NavController
 ) {
     val context = LocalContext.current
-    Log.d(ContentValues.TAG, "HorizontalLazyColumn: ${quizzes}")
+//    Log.d(ContentValues.TAG, "HorizontalLazyColumn: ${quizzes}")
 
             Column (modifier = Modifier
                 .background(Color(0xffCDFFF0))
@@ -93,20 +99,24 @@ fun HorizontalLazyColumn(
                                 ,
                             shape = RoundedCornerShape(16.dp),
                             onClick = {
-                                when(quizViewModel.isQuizSolved(item.toString())){
-                                    "solved" ->{
-                                        Toast.makeText(
-                                            context,
-                                            "you already had Solved this Quiz",
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                                Log.d(TAG, "HorizontalLazyColumn: ${item}")
+
+                                    GlobalScope.launch(Dispatchers.Main) {
+                                        Log.d(TAG, "HorizontalLazyColumn: ${quizViewModel.isQuizSolved(item.toString())}")
+
+                                        when (quizViewModel.isQuizSolved(item.toString())) {
+                                            "solved" -> {
+                                                Toast.makeText(
+                                                    context,
+                                                    "You have already solved this quiz",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                            "wrongAnswer", "notSolved" -> {
+                                                navController.navigate("kidquiz/${item}")
+                                            }
+                                        }
                                     }
-                                    "wrongAnswer" -> navController.navigate("kidquiz/${item}")
-                                    "notSolved" -> navController.navigate("kidquiz/${item}")
-                                }
-
-
-
                             }
 
                             // For more complex coloring, consider using Card's contentColor and other properties

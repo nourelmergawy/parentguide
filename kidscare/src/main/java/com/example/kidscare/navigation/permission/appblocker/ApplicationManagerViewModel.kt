@@ -1,4 +1,4 @@
-package com.example.kidscare.permission.appblocker
+package com.example.kidscare.navigation.permission.appblocker
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
