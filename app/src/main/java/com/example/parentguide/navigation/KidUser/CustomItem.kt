@@ -25,20 +25,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.parentguide.Models.KidData
 import com.example.parentguide.R
 
 @Composable
-fun CustomItem(viewModel: HomeViewModel){
+fun CustomItem(viewModel: HomeViewModel, navController: NavHostController){
     val state by viewModel.kidDataStateFlow.collectAsState()
 
     when (state) {
         is DataState.Success -> {
             val data = (state as DataState.Success<List<KidData>>).data
             // Display the data
-            ShowLazyList(data)
+            ShowLazyList(data,navController)
         }
         is DataState.Failure -> {
             val message = (state as DataState.Failure).message
@@ -83,24 +84,26 @@ fun CustomItem(viewModel: HomeViewModel){
 
 
     @Composable
-    fun ShowLazyList(kidDatas: List<KidData>) {
+    fun ShowLazyList(kidDatas: List<KidData>,navController: NavHostController) {
         LazyColumn {
             items(kidDatas) { kidData ->
                 Log.d(TAG, "ShowLazyList: ${kidData}")
-                CardItem(kidData)
+                CardItem(kidData,navController)
             }
         }
     }
 
     @Composable
-    fun CardItem(kidData: KidData) {
+    fun CardItem(kidData: KidData,navController: NavHostController) {
         lateinit var painterGender:AsyncImagePainter
         Card(
             modifier = Modifier
                 .width(250.dp)
                 .height(250.dp)
                 .padding(8.dp),
-                    onClick ={}
+                    onClick ={
+                        navController.navigate("kidScreen/${kidData.uid.toString()}")
+                    }
         ) {
 
             Box(modifier = Modifier

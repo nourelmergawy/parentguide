@@ -19,12 +19,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 
 @Composable
 fun Home (
     state: HomeState,
     OncreateKidUserClick: () -> Unit,
-    viewModel : HomeViewModel
+    viewModel : HomeViewModel,
+    navController: NavHostController
 ) {
 
     val context = LocalContext.current
@@ -60,7 +62,7 @@ fun Home (
             Text(text = "Create kid user", color = Color.White , fontSize = 24.sp, modifier = Modifier.padding(8.dp))
         }
 
-        CustomItem(viewModel = viewModel)
+        CustomItem(viewModel = viewModel, navController = navController)
     }
 
 

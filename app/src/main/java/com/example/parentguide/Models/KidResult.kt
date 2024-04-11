@@ -10,7 +10,6 @@ data class KidData(
     val uid:  String ? = null,
     val username: String ? = null,
     val password: String ? = null,
-//    val pic : String ? = null,
     val age: Int? = null,
     val dailyLoginHours: Int? = null,
     val intialCoins: Int? = null,

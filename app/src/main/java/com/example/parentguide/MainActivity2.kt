@@ -40,6 +40,7 @@ import com.example.parentguide.navigation.KidUser.CreateKidUser
 import com.example.parentguide.navigation.KidUser.CustomItem
 import com.example.parentguide.navigation.KidUser.Home
 import com.example.parentguide.navigation.KidUser.HomeViewModel
+import com.example.parentguide.navigation.KidUser.displayKid
 import com.example.parentguide.navigation.Notification
 import com.example.parentguide.navigation.ProfileScreen
 import com.example.parentguide.navigation.Screens
@@ -167,7 +168,8 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
                         coroutineScope.launch {
                             navController.navigate(Screens.CreateKidUser.screen)
                         }
-                    }, viewModel = homeViewModel
+                    }, viewModel = homeViewModel,
+                    navController = navController
                 )
 
 
@@ -199,8 +201,12 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
             }
             composable(Screens.CustomItem.screen) {
 
-                CustomItem(viewModel = homeViewModel)
+                CustomItem(viewModel = homeViewModel,navController)
             }
+            composable("kidScreen/{kidId}"){ backStackEntry ->
+                displayKid(homeViewModel = homeViewModel, kidId =  backStackEntry.arguments?.getString("quizId") ?: "",navController = navController)
+            }
+
 
         }
     }
