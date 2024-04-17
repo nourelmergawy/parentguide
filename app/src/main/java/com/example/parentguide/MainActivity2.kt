@@ -22,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parentguide.Notifications.NotificationsViewModel
 import com.example.parentguide.navigation.KidUser.CreateKidUser
 import com.example.parentguide.navigation.KidUser.CustomItem
 import com.example.parentguide.navigation.KidUser.Home
@@ -57,7 +60,6 @@ data class BottomNavigationItem(
 )
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity2 : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val googleAuthUiClient by lazy {
@@ -66,12 +68,19 @@ class MainActivity2 : AppCompatActivity() {
                 oneTapClient = Identity.getSignInClient(applicationContext)
             )
         }
+
+        val notificationsViewModel = ViewModelProvider(this)[NotificationsViewModel::class.java]
         setContent {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    MyBottomAppBar(googleAuthUiClient, coroutineScope = lifecycleScope)
+
+                    LaunchedEffect(key1 = 1) {
+                        notificationsViewModel.checkIfChildExists()
+
+                    }
+                    MyBottomAppBar(googleAuthUiClient, coroutineScope = lifecycleScope,notificationsViewModel)
 
                 }
             }
@@ -80,8 +89,11 @@ class MainActivity2 : AppCompatActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
-                   coroutineScope: LifecycleCoroutineScope
+fun MyBottomAppBar(
+    googleAuthUiClient: GoogleAuthUiClient,
+    coroutineScope: LifecycleCoroutineScope,
+    notificationsViewModel: NotificationsViewModel,
+
 ) {
     val context = LocalContext.current.applicationContext
 
@@ -174,7 +186,7 @@ fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
 
 
             }
-            composable(Screens.Notification.screen){ Notification() }
+            composable(Screens.Notification.screen){ Notification(notificationsViewModel = notificationsViewModel)}
             composable("profile") {
                 ProfileScreen(
                     userData = googleAuthUiClient.getSignedInUser(),

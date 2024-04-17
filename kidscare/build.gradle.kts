@@ -90,4 +90,7 @@ dependencies {
     implementation ("com.airbnb.android:lottie-compose:5.0.3")
     implementation("androidx.compose.material:material-icons-extended")
 
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
 }

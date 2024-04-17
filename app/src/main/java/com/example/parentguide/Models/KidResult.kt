@@ -17,6 +17,7 @@ data class KidData(
     val totalCoins: Int?= null,
     val quizzes: List<QuizScore>?= null,
 
+
     ){
     // Add a no-argument constructor
     constructor() : this("", "0000") // Default values can be used if needed

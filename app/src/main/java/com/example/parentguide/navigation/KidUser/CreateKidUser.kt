@@ -1,6 +1,8 @@
 package com.example.parentguide.navigation.KidUser
 
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.parentguide.Models.KidData
+import com.example.parentguide.Models.KidNotifications
+import com.example.parentguide.Models.Notifications
+import com.example.parentguide.Models.ParentNotifications
 import com.example.parentguide.Models.QuizScore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -50,6 +55,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.security.MessageDigest
+import java.time.LocalDateTime
 
 @Composable
 fun CreateKidUser(
@@ -70,7 +76,7 @@ fun CreateKidUser(
         LazyColumn(
             modifier = Modifier
                 .background(Color(0xFFBACAE7))
-            .fillMaxSize()
+                .fillMaxSize()
         ) {
             item(1000) {
 
@@ -226,6 +232,7 @@ fun CreateKidUser(
 
                             databaseReference.addListenerForSingleValueEvent(object :
                                 ValueEventListener {
+                                @RequiresApi(Build.VERSION_CODES.O)
                                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                                     val count = dataSnapshot.childrenCount
 
@@ -250,6 +257,7 @@ fun CreateKidUser(
                                     val uniqueId = databaseReference.push().key
                                         ?: return  // Get a unique ID and return if null
 
+
                                     // Create kid user if validation passes
                                     val kidUser = KidData(
                                         uniqueId,
@@ -261,7 +269,7 @@ fun CreateKidUser(
                                         initialCoins.value.text.toIntOrNull() ?: 0,
                                         selectedGender,
                                         quizzes = listOf(QuizScore(hasSolved = "notSolved",score = 0, tryCount = 0)),
-                                        totalCoins = initialCoins.value.text.toIntOrNull() ?: 0
+                                        totalCoins = initialCoins.value.text.toIntOrNull() ?: 0,
                                     )
 
                                     databaseReference.child(uniqueId).setValue(kidUser)

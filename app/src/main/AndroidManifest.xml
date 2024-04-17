@@ -16,7 +16,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="31">
-        <!--        android:theme="@style/AppTheme"-->
+        <service
+            android:name=".Service.MainForegroundService"
+            android:exported="true"> <!-- Set to true because it must be explicitly accessible by Firebase -->
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name=".MainActivity2"
