@@ -305,7 +305,8 @@ class MainActivity2 : AppCompatActivity() {
                     QuizScreen(
                         quizViewModel = quizViewModel,
                         quizId = backStackEntry.arguments?.getString("quizId") ?: "",
-                        navController =navController
+                        navController =navController,
+                        notificationsViewModel = notificationsViewModel
                     )
                 }
                 composable(Screens.KidHome.screen) {
