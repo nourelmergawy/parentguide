@@ -232,7 +232,7 @@ class MainActivity2 : AppCompatActivity() {
                                 navController.navigate(item.title)
                             },
                             label = {
-                                Text(text = item.title)
+                                Text(text = item.title , color = Color.White)
                             },
                             alwaysShowLabel = false,
                             icon = {
@@ -251,7 +251,12 @@ class MainActivity2 : AppCompatActivity() {
                                         imageVector = if (index == selectedItemIndex) {
                                             item.selectedIcon
                                         } else item.unselectedIcon,
-                                        contentDescription = item.title
+                                        contentDescription = item.title,
+                                        tint = if (index == selectedItemIndex) {
+                                           Color.Black
+                                        } else {
+                                            Color.White
+                                        }
                                     )
                                 }
                             }

@@ -27,32 +27,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.parentguide.Models.KidData
 import com.example.parentguide.R
 
 @Composable
-fun CustomItem(viewModel: HomeViewModel, navController: NavHostController){
+fun CustomItem(viewModel: HomeViewModel, navController: NavHostController) {
     val state by viewModel.kidDataStateFlow.collectAsState()
 
     when (state) {
         is DataState.Success -> {
             val data = (state as DataState.Success<List<KidData>>).data
             // Display the data
-            ShowLazyList(data,navController)
+            ShowLazyList(data, navController)
         }
+
         is DataState.Failure -> {
             val message = (state as DataState.Failure).message
 
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = message,
-                        fontSize = 24.sp,
-                    )
-                }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = message,
+                    fontSize = 24.sp,
+                )
+            }
 
         }
 
@@ -64,6 +66,7 @@ fun CustomItem(viewModel: HomeViewModel, navController: NavHostController){
                 CircularProgressIndicator()
             }
         }
+
         DataState.Empty -> {
             // Show empty state or initial UI
         }
@@ -80,64 +83,65 @@ fun CustomItem(viewModel: HomeViewModel, navController: NavHostController){
             }
         }
     }
-    }
+}
 
 
-    @Composable
-    fun ShowLazyList(kidDatas: List<KidData>,navController: NavHostController) {
-        LazyColumn {
-            items(kidDatas) { kidData ->
-                Log.d(TAG, "ShowLazyList: ${kidData}")
-                CardItem(kidData,navController)
-            }
+@Composable
+fun ShowLazyList(kidDatas: List<KidData>, navController: NavHostController) {
+    LazyColumn {
+        items(kidDatas) { kidData ->
+            Log.d(TAG, "ShowLazyList: ${kidData}")
+            CardItem(kidData, navController)
         }
     }
+}
 
-    @Composable
-    fun CardItem(kidData: KidData,navController: NavHostController) {
-        lateinit var painterGender:AsyncImagePainter
-        Card(
+@Composable
+fun CardItem(kidData: KidData, navController: NavHostController) {
+    lateinit var painterGender: AsyncImagePainter
+    Card(
+        modifier = Modifier
+            .width(250.dp)
+            .height(250.dp)
+            .padding(8.dp),
+        onClick = {
+            navController.navigate("kidScreen/${kidData.uid.toString()}")
+        }
+    ) {
+
+        Box(
             modifier = Modifier
-                .width(250.dp)
-                .height(250.dp)
-                .padding(8.dp),
-                    onClick ={
-                        navController.navigate("kidScreen/${kidData.uid.toString()}")
-                    }
-        ) {
-
-            Box(modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xffA5B6D2))) {
-                Log.d(TAG, "CardItem: ${kidData.gender}")
-                if (kidData.gender == "Male"){
-                     painterGender = rememberImagePainter(R.drawable.boy)
-                }else{
-                     painterGender = rememberImagePainter(R.drawable.girl)
-                }
-                Image(
-                    painter = painterGender,
-                    modifier = Modifier
-                        .width(200.dp)
-                        .height(200.dp)
-                        .align(Alignment.Center),
-                    contentDescription = "My content description",
-                    contentScale = ContentScale.FillWidth,
-                )
-
-                Text(
-                    text = kidData.username!!,
-                    fontSize = 32.sp,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .background(Color.White)
-                        ,
-                    textAlign = TextAlign.Center,
-                    color = Color.Black
-                )
-
+                .background(Color(0xffA5B6D2))
+        ) {
+            Log.d(TAG, "CardItem: ${kidData.gender}")
+            painterGender = if (kidData.gender == "Male") {
+                rememberAsyncImagePainter(R.drawable.boy)
+            } else {
+                rememberAsyncImagePainter(R.drawable.girl)
             }
+            Image(
+                painter = painterGender,
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(200.dp)
+                    .align(Alignment.Center),
+                contentDescription = "My content description",
+                contentScale = ContentScale.FillWidth,
+            )
+
+            Text(
+                text = kidData.username!!,
+                fontSize = 32.sp,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(Color.White),
+                textAlign = TextAlign.Center,
+                color = Color.Black
+            )
 
         }
+
     }
+}

@@ -10,7 +10,7 @@ data class Notifications (
 
 data class KidNotifications(
     val messageBody: String? = null,
-    val date: String = null,
+    val date: String? = null,
     val timeUnit: String,
 )
 
