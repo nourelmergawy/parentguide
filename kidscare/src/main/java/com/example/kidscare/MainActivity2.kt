@@ -61,21 +61,22 @@ import androidx.navigation.compose.rememberNavController
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.kidscare.Models.KidData
-import com.example.kidscare.navigation.Kid.CustomItem
+import com.example.kidscare.Notification.Notification
+import com.example.kidscare.Notification.NotificationsViewModel
 import com.example.kidscare.navigation.Home.Home
 import com.example.kidscare.navigation.Home.HomeState
 import com.example.kidscare.navigation.Home.HomeViewModel
+import com.example.kidscare.navigation.Kid.CustomItem
 import com.example.kidscare.navigation.Kid.homeKidScreen
-import com.example.kidscare.Notification.Notification
 import com.example.kidscare.navigation.ProfileScreen
 import com.example.kidscare.navigation.Screens
-import com.example.kidscare.navigation.quiz.QuizScreen
-import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.navigation.permission.AppLockScreen
+import com.example.kidscare.navigation.permission.InstalledAppsList
+import com.example.kidscare.navigation.permission.appblocker.ApplicationManagerViewModel
 import com.example.kidscare.navigation.permission.appusage.AppUsageCheckWorker
 import com.example.kidscare.navigation.permission.appusage.AppUsageViewModel
-import com.example.kidscare.navigation.permission.appblocker.ApplicationManagerViewModel
-import com.example.kidscare.navigation.permission.InstalledAppsList
+import com.example.kidscare.navigation.quiz.QuizScreen
+import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.service.MyDeviceAdminReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
 import kotlinx.coroutines.CoroutineScope
@@ -166,6 +167,7 @@ class MainActivity2 : AppCompatActivity() {
 
         // Fetch installed apps
         applicationManagerViewModel.fetchInstalledApps(this)
+        val notificationsViewModel = ViewModelProvider(this)[NotificationsViewModel::class.java]
         setContent {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -175,7 +177,7 @@ class MainActivity2 : AppCompatActivity() {
                     quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
                     homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
                     val stateCreate by homeViewModel.state.collectAsStateWithLifecycle()
-                    MyBottomAppBar(googleAuthUiClient= googleAuthUiClient,coroutineScope = lifecycleScope,homeViewModel,stateCreate)
+                    MyBottomAppBar(googleAuthUiClient= googleAuthUiClient,coroutineScope = lifecycleScope,homeViewModel,stateCreate,notificationsViewModel)
                 }
 //            MainAppScreen(appUsageViewModel)
         }
@@ -183,10 +185,12 @@ class MainActivity2 : AppCompatActivity() {
     }
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Composable
-    fun MyBottomAppBar(googleAuthUiClient: GoogleAuthUiClient,
-                       coroutineScope: LifecycleCoroutineScope,
-                       homeViewModel: HomeViewModel,
-                       stateCreate: HomeState
+    fun MyBottomAppBar(
+        googleAuthUiClient: GoogleAuthUiClient,
+        coroutineScope: LifecycleCoroutineScope,
+        homeViewModel: HomeViewModel,
+        stateCreate: HomeState,
+        notificationsViewModel: NotificationsViewModel
     ) {
         val context = LocalContext.current.applicationContext
 
@@ -271,7 +275,10 @@ class MainActivity2 : AppCompatActivity() {
                         ,navController = navController
                        )
                 }
-                composable(Screens.Notification.screen){ Notification() }
+
+                composable(Screens.Notification.screen){
+                    Notification(notificationsViewModel = notificationsViewModel)
+                }
                 composable(Screens.Profile.screen) {
                     ProfileScreen(
                         userData = googleAuthUiClient.getSignedInUser(),

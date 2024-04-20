@@ -52,11 +52,12 @@ import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.Models.QuizScore
+import com.example.kidscare.Notification.NotificationsViewModel
 import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
 
 @Composable
-fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavController) {
+fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavController,notificationsViewModel: NotificationsViewModel) {
     Log.d(TAG, "getKidData: ${KidDataRepository.getKidData()}")
 
     val kidData: KidData? = KidDataRepository.getKidData()
@@ -66,6 +67,7 @@ fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavCo
     LaunchedEffect(true) {
         quizViewModel.loadQuiz(quizId)
         quizViewModel.getQuizScore(quizId)
+        notificationsViewModel
     }
     quizData?.let { quiz ->
         QuizContent(
