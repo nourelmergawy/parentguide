@@ -1,6 +1,7 @@
 package com.example.kidscare.Notification
 
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -30,17 +31,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidNotifications
 import com.example.kidscare.R
 
 @Composable
-fun Notification (notificationsViewModel: NotificationsViewModel,
+fun Notification( notificationsViewModel: NotificationsViewModel
 ){
     LaunchedEffect(1) {
+        val kidID = KidDataRepository.getKidData()!!.uid.toString()
+        notificationsViewModel.checkIfChildExists(kidID)
         notificationsViewModel.fetchNotification()
     }
     // Observing LiveData
-    val notifications by notificationsViewModel.parentNotifications.observeAsState()
+    val notifications by notificationsViewModel.kidNotifications.observeAsState()
     notifications.let {
             notification ->
         notification?.forEach{
@@ -49,6 +53,8 @@ fun Notification (notificationsViewModel: NotificationsViewModel,
                 it!!
             )
         }
+
+
     }
 }
 
@@ -74,15 +80,17 @@ fun ItemNotificationsCard(kidNotifications: KidNotifications) {
                 painter = image,
                 alignment = Alignment.Center,
                 contentDescription = "",
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.align(Alignment.CenterVertically)
+            Column(modifier = Modifier
+                .align(Alignment.CenterVertically)
                 .fillMaxWidth()) {
+                Log.d(TAG, "ItemNotificationsCard: $kidNotifications")
                 Text(
-                    text = kidNotifications.messageBody.toString(),
+                    text = kidNotifications.kidId.toString(),
                     modifier = Modifier.padding(0.dp, 0.dp, 12.dp, 0.dp),
                     color = Color(0xFF000000),
                     fontWeight = FontWeight.Bold,
@@ -102,8 +110,9 @@ fun ItemNotificationsCard(kidNotifications: KidNotifications) {
 //                    style = typography.caption
 //                )
                 Text(
-                    text = kidNotifications.date.toString(),
-                    modifier = Modifier.padding(8.dp, 12.dp, 12.dp, 0.dp)
+                    text = kidNotifications.messageBody.toString(),
+                    modifier = Modifier
+                        .padding(8.dp, 12.dp, 12.dp, 0.dp)
                         .align(AbsoluteAlignment.Right),
                     color =Color(0xFF000000),
                     style = MaterialTheme.typography.titleSmall

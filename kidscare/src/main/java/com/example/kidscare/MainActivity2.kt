@@ -275,7 +275,10 @@ class MainActivity2 : AppCompatActivity() {
                         ,navController = navController
                        )
                 }
-                composable(Screens.Notification.screen){ Notification(notificationsViewModel = notificationsViewModel) }
+
+                composable(Screens.Notification.screen){
+                    Notification(notificationsViewModel = notificationsViewModel)
+                }
                 composable(Screens.Profile.screen) {
                     ProfileScreen(
                         userData = googleAuthUiClient.getSignedInUser(),
@@ -302,7 +305,8 @@ class MainActivity2 : AppCompatActivity() {
                     QuizScreen(
                         quizViewModel = quizViewModel,
                         quizId = backStackEntry.arguments?.getString("quizId") ?: "",
-                        navController =navController
+                        navController =navController,
+                        notificationsViewModel = notificationsViewModel
                     )
                 }
                 composable(Screens.KidHome.screen) {
