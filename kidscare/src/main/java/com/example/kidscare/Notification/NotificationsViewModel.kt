@@ -1,6 +1,7 @@
 package com.example.kidscare.Notification
 
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -70,34 +71,32 @@ class NotificationsViewModel  : ViewModel() {
                 Log.d(ContentValues.TAG, "notifications: error")
             }
     }
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    private fun createNotification(uid: String,kidId:String) {
-//        val currentDateTime = LocalDateTime.now()
-//        val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-//        val formattedTime = currentDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-//
-//        val kidtifications = mapOf("Int.MAX_VALUE" ->KidNotifications(
-//                    "welcome to app",
-//                    formattedDate,
-//                    formattedTime
-//                )
-//            )
-//        )
-//
-//        dbRef.child(uid).child("kidsUsers").child(kidId).child("Notifications").updateChildren(kidtifications)
-//            .addOnSuccessListener {
-//                Log.d(ContentValues.TAG, "notifications: created")
-//            }
-//            .addOnFailureListener {
-//                Log.d(ContentValues.TAG, "notifications: error")
-//            }
-//    }
+    @RequiresApi(Build.VERSION_CODES.O)
+     fun createNotification(kidId:String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentDateTime = LocalDateTime.now()
+        val formattedDate = currentDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        val formattedTime = currentDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+
+        val kidtifications :Map<String, KidNotifications> = mapOf("0" to KidNotifications(
+        "welcome to app",
+        formattedDate,
+        formattedTime
+        ))
+
+        dbRef.child(uid).child("kidsUsers").child(kidId).child("Notifications").updateChildren(kidtifications)
+            .addOnSuccessListener {
+                Log.d(ContentValues.TAG, "notifications: created")
+            }
+            .addOnFailureListener {
+                Log.d(ContentValues.TAG, "notifications: error")
+            }
+    }
     private val _notification = MutableLiveData<KidNotifications>()
     val notification: LiveData<KidNotifications> = _notification
-
     fun fetchNotification(): MutableLiveData<List<KidNotifications?>?> {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
-        dbRef.child(uid!!).child("kidNotifications")
+        dbRef.child(uid!!).child("parentNotifications")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val notifications = mutableListOf<KidNotifications>()
@@ -109,7 +108,28 @@ class NotificationsViewModel  : ViewModel() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w(ContentValues.TAG, "Failed to read value.", error.toException())
+                    Log.w(TAG, "Failed to read value.", error.toException())
+                }
+            })
+        return _kidNotifications
+    }
+    fun fetchNotification(kidId: String): MutableLiveData<List<KidNotifications?>?> {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        dbRef.child(uid!!).child("kidsUsers").child(kidId).child("Notifications")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val notifications = mutableListOf<KidNotifications>()
+                    for (childSnapshot in snapshot.children) {
+                        val notification = childSnapshot.getValue(KidNotifications::class.java)
+                        notification?.let {
+                            Log.d(TAG, "fetchNotification: $notifications")
+                            notifications.add(it) }
+                    }
+                    _kidNotifications.value = notifications
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w(TAG, "Failed to read value.", error.toException())
                 }
             })
         return _kidNotifications

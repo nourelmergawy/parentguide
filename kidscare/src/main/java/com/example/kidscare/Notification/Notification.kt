@@ -2,7 +2,9 @@ package com.example.kidscare.Notification
 
 import android.content.ContentValues
 import android.content.ContentValues.TAG
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,20 +37,22 @@ import com.example.kidscare.KidDataRepository
 import com.example.kidscare.Models.KidNotifications
 import com.example.kidscare.R
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Notification( notificationsViewModel: NotificationsViewModel
 ){
     LaunchedEffect(1) {
         val kidID = KidDataRepository.getKidData()!!.uid.toString()
         notificationsViewModel.checkIfChildExists(kidID)
-        notificationsViewModel.fetchNotification()
+        notificationsViewModel.createNotification(kidID)
+        notificationsViewModel.fetchNotification(kidID)
     }
     // Observing LiveData
     val notifications by notificationsViewModel.kidNotifications.observeAsState()
     notifications.let {
             notification ->
         notification?.forEach{
-            Log.d(ContentValues.TAG, "Notification: ${it!!.messageBody}")
+            Log.d(ContentValues.TAG, "Notification: ${it!!}")
             ItemNotificationsCard(
                 it!!
             )
