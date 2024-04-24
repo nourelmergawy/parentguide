@@ -2,6 +2,7 @@ package com.example.kidscare
 
 import android.content.ContentValues.TAG
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -16,22 +17,30 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.kidscare.service.UnlockReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
 import com.example.kidscare.signin.SignInScreen
 import com.example.kidscare.signin.SignInViewModel
 import com.example.kidscare.ui.theme.ParentGuideTheme
+import com.example.kidscare.unlockDialog.UnlockDialog
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private lateinit var unlockReceiver: UnlockReceiver
+    private var showDialog by mutableStateOf(false)
     private val googleSignInOptions by lazy {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
@@ -54,7 +63,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+//test
             ParentGuideTheme {
+                if (showDialog) {
+                    Log.d("Compose", "Dialog should show now")
+                }
+                UnlockDialog(showDialog, onDismiss = { showDialog = false })
+                InitializeReciver()
+
+                // Ensure to unregister the receiver when the activity is destroyed
+                lifecycle.addObserver(LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_DESTROY) {
+                        unregisterReceiver(unlockReceiver)
+                    }
+                })
+
                 AppContent()
             }
         }
@@ -132,5 +155,14 @@ class MainActivity : ComponentActivity() {
 
     private fun showToast(message: String) {
         Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+    }
+    fun InitializeReciver() {
+        // Initialize and register receiver
+        unlockReceiver = UnlockReceiver { showDialog = true }
+        IntentFilter(Intent.ACTION_USER_PRESENT).also {
+            registerReceiver(unlockReceiver, it)
+        }
+
+
     }
 }

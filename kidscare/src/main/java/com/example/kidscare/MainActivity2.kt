@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -50,7 +51,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,7 +81,9 @@ import com.example.kidscare.navigation.permission.appusage.AppUsageViewModel
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.service.MyDeviceAdminReceiver
+import com.example.kidscare.service.UnlockReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
+import com.example.kidscare.unlockDialog.UnlockDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -105,6 +110,7 @@ object KidDataRepository {
     }
 }
 class MainActivity2 : AppCompatActivity() {
+
     val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = applicationContext,
@@ -173,7 +179,6 @@ class MainActivity2 : AppCompatActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-
                     quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
                     homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
                     val stateCreate by homeViewModel.state.collectAsStateWithLifecycle()
@@ -183,6 +188,8 @@ class MainActivity2 : AppCompatActivity() {
         }
 
     }
+
+
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Composable
     fun MyBottomAppBar(

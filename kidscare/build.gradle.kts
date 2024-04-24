@@ -52,6 +52,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -84,13 +85,13 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation ("com.google.android.gms:play-services-auth:19.2.0")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.4")
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation ("com.airbnb.android:lottie-compose:5.0.3")
+    implementation (libs.play.services.auth.v1920)
+    implementation (libs.androidx.runtime.livedata)
+    implementation(libs.coil.compose)
+    implementation (libs.lottie.compose)
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.androidx.activity.compose.v151)
 }
