@@ -81,9 +81,7 @@ import com.example.kidscare.navigation.permission.appusage.AppUsageViewModel
 import com.example.kidscare.navigation.quiz.QuizScreen
 import com.example.kidscare.navigation.quiz.QuizViewModel
 import com.example.kidscare.service.MyDeviceAdminReceiver
-import com.example.kidscare.service.UnlockReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
-import com.example.kidscare.unlockDialog.UnlockDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

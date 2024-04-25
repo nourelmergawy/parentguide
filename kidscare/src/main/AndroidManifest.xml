@@ -45,7 +45,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission  android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <application
+        android:name=".ParentGuideApp"
         android:allowBackup="true"
         android:icon="@drawable/kides_care"
         android:label="@string/app_name"
@@ -74,6 +77,13 @@
             android:exported="false"
             android:foregroundServiceType="dataSync">
         </service>
+        <receiver android:name=".service.ScreenUnlockReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY" />
