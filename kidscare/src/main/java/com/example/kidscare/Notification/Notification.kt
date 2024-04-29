@@ -40,27 +40,35 @@ import com.example.kidscare.R
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Notification( notificationsViewModel: NotificationsViewModel
-){
-    LaunchedEffect(1) {
-        val kidID = KidDataRepository.getKidData()!!.uid.toString()
-        notificationsViewModel.checkIfChildExists(kidID)
-        notificationsViewModel.createNotification(kidID)
-        notificationsViewModel.fetchNotification(kidID)
-    }
-    // Observing LiveData
-    val notifications by notificationsViewModel.kidNotifications.observeAsState()
-    notifications.let {
-            notification ->
-        notification?.forEach{
-            Log.d(ContentValues.TAG, "Notification: ${it!!}")
-            ItemNotificationsCard(
-                it!!
-            )
+) {
+    KidDataRepository.getKidData()?.let { kidData ->
+        val kidID = kidData.uid.toString()
+
+        LaunchedEffect(kidID) {
+            notificationsViewModel.checkIfChildExists(kidID)
+            notificationsViewModel.createNotification(kidID)
+            notificationsViewModel.fetchNotification(kidID)
         }
 
+        // Observing LiveData
+        val notifications by notificationsViewModel.kidNotifications.observeAsState()
+        notifications?.let { notificationList ->
+            notificationList.forEach { notification ->
+                notification?.let {
+                    Log.d(ContentValues.TAG, "Notification: $it")
+                    ItemNotificationsCard(it)
+                }
+            }
+        } ?: run {
+            Text(text = "No notifications available.")
+        }
 
+    } ?: run {
+        Text(text = "Please sign in first.")
     }
+
 }
+
 
 @Composable
 fun ItemNotificationsCard(kidNotifications: KidNotifications) {

@@ -1,9 +1,12 @@
 package com.example.kidscare
 
+import android.content.BroadcastReceiver
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,36 +14,37 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.kidscare.service.UnlockReceiver
+import com.example.kidscare.navigation.permission.scenarioViewModel
+import com.example.kidscare.service.UserPresentReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
 import com.example.kidscare.signin.SignInScreen
 import com.example.kidscare.signin.SignInViewModel
 import com.example.kidscare.ui.theme.ParentGuideTheme
-import com.example.kidscare.unlockDialog.UnlockDialog
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private lateinit var unlockReceiver: UnlockReceiver
-    private var showDialog by mutableStateOf(false)
+
     private val googleSignInOptions by lazy {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
@@ -58,30 +62,94 @@ class MainActivity : ComponentActivity() {
     }
 
 
+//    private val userPresentReceiver = UserPresentReceiver()
+    private lateinit var userPresentReceiver: BroadcastReceiver
+    private val viewModel: scenarioViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setContent {
-//test
-            ParentGuideTheme {
-                if (showDialog) {
-                    Log.d("Compose", "Dialog should show now")
+        val dateFormat = DateFormat.getDateFormat(
+            applicationContext
+        )
+        // Initialize userPresentReceiver before registering
+        userPresentReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_USER_PRESENT) {
+                    viewModel.onUserPresent()
                 }
-                UnlockDialog(showDialog, onDismiss = { showDialog = false })
-                InitializeReciver()
+            }
+        }
 
-                // Ensure to unregister the receiver when the activity is destroyed
-                lifecycle.addObserver(LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_DESTROY) {
-                        unregisterReceiver(unlockReceiver)
-                    }
-                })
-
-                AppContent()
+        // Register for ACTION_USER_PRESENT
+        val userPresentFilter = IntentFilter(Intent.ACTION_USER_PRESENT)
+        registerReceiver(userPresentReceiver, userPresentFilter)
+        if (intent.getBooleanExtra("triggerDialog", false)) {
+            viewModel.onUserPresent()
+        }
+        // Set the content view for the activity
+        setContent {
+            ParentGuideTheme {
+                // Initialize the receiver
+                MyApp()
+//                AppContent()
             }
         }
     }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        unregisterReceiver(userPresentReceiver)
+//    }
+    override fun onStart() {
+        super.onStart()
+        userPresentReceiver = UserPresentReceiver()
+        val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+        registerReceiver(userPresentReceiver, filter)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(userPresentReceiver)
+    }
+    @Composable
+    fun MyApp(viewModel: scenarioViewModel = viewModel()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box {
+                ShowDialogIfNeeded(viewModel)
+                // Additional UI components can be placed here
+                MainContent()
+            }
+        }
+    }
+
+    @Composable
+    fun ShowDialogIfNeeded(viewModel: scenarioViewModel) {
+        // Ensure that viewModel.showDialog is a StateFlow and initialize collectAsState properly
+        val showDialog by viewModel.showDialog.collectAsState()
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissDialog() },
+                title = { Text("Welcome Back!") },
+                text = { Text("You've just unlocked your phone. Have fun!") },
+                confirmButton = {
+                    Button(onClick = { viewModel.dismissDialog() }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+    }
+
+    @Composable
+    fun MainContent() {
+        // Here, you can define the main content of your app
+        Text(text = "Hello, this is the main content of the app!", style = MaterialTheme.typography.bodyMedium)
+    }
+
+
 
     @Composable
     private fun AppContent() {
@@ -156,13 +224,5 @@ class MainActivity : ComponentActivity() {
     private fun showToast(message: String) {
         Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
     }
-    fun InitializeReciver() {
-        // Initialize and register receiver
-        unlockReceiver = UnlockReceiver { showDialog = true }
-        IntentFilter(Intent.ACTION_USER_PRESENT).also {
-            registerReceiver(unlockReceiver, it)
-        }
 
-
-    }
 }

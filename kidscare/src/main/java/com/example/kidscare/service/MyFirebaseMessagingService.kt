@@ -14,6 +14,7 @@ import com.example.kidscare.MainActivity2
 import com.example.kidscare.R
 import com.google.firebase.messaging.FirebaseMessagingService
 
+@SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val channelId = 1
     private val channelName = "kids_care"

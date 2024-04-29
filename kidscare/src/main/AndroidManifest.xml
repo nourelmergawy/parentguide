@@ -17,13 +17,12 @@
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.GET_TASKS" /> <!-- FOR FOREGROUND APPS BEFORE LOLLIPOP -->
 
     <uses-permission
@@ -42,13 +41,18 @@
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
 
     <!-- Storage access permissions for reading/writing to the device's storage -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
     <uses-permission  android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".ParentGuideApp"
         android:allowBackup="true"
         android:icon="@drawable/kides_care"
         android:label="@string/app_name"
@@ -66,32 +70,23 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/teal_200" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY" />
+        <meta-data
+            android:name=".CHANNEL_ID"
+            android:value="my_notification_channel" />
+
         <activity
             android:name=".navigation.permission.appblocker.BlockedAppActivity"
             android:exported="false"
             android:label="@string/title_activity_blocked_app"
             android:theme="@style/Theme.KidsCare" />
 
-        <service
-            android:name=".navigation.permission.lockdevice.LockService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync">
-        </service>
-        <receiver android:name=".service.ScreenUnlockReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.USER_PRESENT" />
-            </intent-filter>
-        </receiver>
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY" />
-
         <activity
             android:name=".MainActivity2"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -102,26 +97,29 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <!-- Service for handling lock device functionality -->
+        <service
+            android:name=".navigation.permission.lockdevice.LockService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync">
+        </service>
+
+        <!-- Firebase Messaging Service -->
         <service
             android:name=".service.MyFirebaseMessagingService"
-            android:exported="false">
+            android:exported="false"> <!-- Typically this should not be accessible to other apps unless specifically required -->
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
         <receiver
-            android:name=".service.MyDeviceAdminReceiver"
-            android:description="@string/admin_receiver_description"
-            android:label="@string/admin_receiver_label"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:exported="true">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
+            android:name=".service.UserPresentReceiver"
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
-                <!-- Include other actions as needed -->
+                <action android:name="android.intent.action.SCREEN_ON" />
             </intent-filter>
         </receiver>
 
