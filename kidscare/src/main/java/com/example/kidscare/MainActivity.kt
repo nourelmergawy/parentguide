@@ -1,10 +1,8 @@
 package com.example.kidscare
 
-import android.content.BroadcastReceiver
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
@@ -14,17 +12,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Box
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,8 +26,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.kidscare.navigation.permission.scenarioViewModel
-import com.example.kidscare.service.UserPresentReceiver
 import com.example.kidscare.signin.GoogleAuthUiClient
 import com.example.kidscare.signin.SignInScreen
 import com.example.kidscare.signin.SignInViewModel
@@ -62,91 +53,19 @@ class MainActivity : ComponentActivity() {
     }
 
 
-//    private val userPresentReceiver = UserPresentReceiver()
-    private lateinit var userPresentReceiver: BroadcastReceiver
-    private val viewModel: scenarioViewModel by viewModels()
-
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dateFormat = DateFormat.getDateFormat(
             applicationContext
         )
-        // Initialize userPresentReceiver before registering
-        userPresentReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == Intent.ACTION_USER_PRESENT) {
-                    viewModel.onUserPresent()
-                }
-            }
-        }
-
-        // Register for ACTION_USER_PRESENT
-        val userPresentFilter = IntentFilter(Intent.ACTION_USER_PRESENT)
-        registerReceiver(userPresentReceiver, userPresentFilter)
-        if (intent.getBooleanExtra("triggerDialog", false)) {
-            viewModel.onUserPresent()
-        }
-        // Set the content view for the activity
         setContent {
             ParentGuideTheme {
                 // Initialize the receiver
-                MyApp()
+//                MyApp()
 //                AppContent()
             }
         }
-    }
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        unregisterReceiver(userPresentReceiver)
-//    }
-    override fun onStart() {
-        super.onStart()
-        userPresentReceiver = UserPresentReceiver()
-        val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
-        registerReceiver(userPresentReceiver, filter)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        unregisterReceiver(userPresentReceiver)
-    }
-    @Composable
-    fun MyApp(viewModel: scenarioViewModel = viewModel()) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box {
-                ShowDialogIfNeeded(viewModel)
-                // Additional UI components can be placed here
-                MainContent()
-            }
-        }
-    }
-
-    @Composable
-    fun ShowDialogIfNeeded(viewModel: scenarioViewModel) {
-        // Ensure that viewModel.showDialog is a StateFlow and initialize collectAsState properly
-        val showDialog by viewModel.showDialog.collectAsState()
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { viewModel.dismissDialog() },
-                title = { Text("Welcome Back!") },
-                text = { Text("You've just unlocked your phone. Have fun!") },
-                confirmButton = {
-                    Button(onClick = { viewModel.dismissDialog() }) {
-                        Text("OK")
-                    }
-                }
-            )
-        }
-    }
-
-    @Composable
-    fun MainContent() {
-        // Here, you can define the main content of your app
-        Text(text = "Hello, this is the main content of the app!", style = MaterialTheme.typography.bodyMedium)
     }
 
 

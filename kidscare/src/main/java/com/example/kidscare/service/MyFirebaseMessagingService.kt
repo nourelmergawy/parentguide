@@ -50,7 +50,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun createNotification(context: Context,notificationText:String?): Notification {
+    private  fun createNotification(context: Context,notificationText:String?): Notification {
         // Create an intent for launching your app's main activity when the notification is tapped
         val intent = Intent(context, MainActivity2::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

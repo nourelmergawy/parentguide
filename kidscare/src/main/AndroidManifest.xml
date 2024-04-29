@@ -5,52 +5,41 @@
     <uses-permission
         android:name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"
         tools:ignore="ProtectedPermissions" />
-
-
     <uses-permission android:name="android.permission.INTERNET" /> <!-- This line -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission
-        android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
     <uses-permission
-        android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
     <uses-permission android:name="android.permission.GET_TASKS" /> <!-- FOR FOREGROUND APPS BEFORE LOLLIPOP -->
-
     <uses-permission
-        android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" /> <!-- DONE -->
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" /> <!-- DONE -->
     <!-- Permission to install apps -->
-
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
-    <!-- Permission to display over other apps -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- Device admin permissions for managing device settings and restrictions -->
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
-
-    <!-- Notification access permission -->
-    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
-
-    <!-- Storage access permissions for reading/writing to the device's storage -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- Permission to display over other apps -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- Device admin permissions for managing device settings and restrictions -->
+    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" /> <!-- Notification access permission -->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" /> <!-- Storage access permissions for reading/writing to the device's storage -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"
         tools:ignore="ScopedStorage" />
-    <uses-permission  android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
 
     <application
         android:allowBackup="true"
@@ -59,14 +48,27 @@
         android:roundIcon="@drawable/kides_care"
         android:supportsRtl="true"
         android:theme="@style/Theme.KidsCare">
+        <activity
+            android:name=".UnlockDialogActivity"
+            android:exported="true"
+            android:theme="@style/Theme.KidsCare">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
-     See README(https://goo.gl/l4GJaQ) for more. -->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!--
+     Set custom default icon. This is used when no icon is set for incoming notification messages.
+     See README(https://goo.gl/l4GJaQ) for more.
+        -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/kides_care" />
-        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
-             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <!--
+ Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more.
+        -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/teal_200" />
@@ -82,7 +84,6 @@
             android:exported="false"
             android:label="@string/title_activity_blocked_app"
             android:theme="@style/Theme.KidsCare" />
-
         <activity
             android:name=".MainActivity2"
             android:exported="false"
@@ -94,19 +95,14 @@
             android:theme="@style/Theme.ParentGuide">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-
-        <!-- Service for handling lock device functionality -->
+        </activity> <!-- Service for handling lock device functionality -->
         <service
             android:name=".navigation.permission.lockdevice.LockService"
             android:exported="false"
-            android:foregroundServiceType="dataSync">
-        </service>
-
-        <!-- Firebase Messaging Service -->
+            android:foregroundServiceType="dataSync" /> <!-- Firebase Messaging Service -->
         <service
             android:name=".service.MyFirebaseMessagingService"
             android:exported="false"> <!-- Typically this should not be accessible to other apps unless specifically required -->
@@ -123,6 +119,18 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:name=".service.UnlockService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <receiver android:name=".service.ScreenUnlockReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

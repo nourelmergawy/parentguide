@@ -46,4 +46,7 @@
     <string name="admin_receiver_explanation">This app requires device administrator privileges to manage and secure your device.</string>
     <string name="admin_receiver_description">Description of what your device admin receiver does</string>
     <string name="admin_receiver_label">Your App Device Admin</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
 </resources>
