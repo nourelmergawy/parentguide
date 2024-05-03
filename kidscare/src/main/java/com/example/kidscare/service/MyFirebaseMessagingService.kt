@@ -22,7 +22,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val notificationChannel = "kids_care_Channel_ID" // Make sure it matches the ID of the notification channel
     private val notificationTitle = "kids care"
     @SuppressLint("MissingPermission")
-    fun showNotification(context: Context,notificationText:String?) {
+    fun showNotification(context: Context,notificationText:String?) :Notification{
         createNotificationChannel(context)
         val notification = createNotification(context,notificationText)
 
@@ -34,6 +34,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val notificationManager = NotificationManagerCompat.from(context)
         notificationManager.notify(channelId, notification)
+        return notification
     }
 
     private fun createNotificationChannel(context: Context,) {
