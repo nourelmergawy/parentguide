@@ -62,8 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ParentGuideTheme {
                 // Initialize the receiver
-//                MyApp()
-//                AppContent()
+                AppContent()
             }
         }
     }

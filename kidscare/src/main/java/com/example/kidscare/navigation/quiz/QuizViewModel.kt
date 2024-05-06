@@ -77,7 +77,7 @@ class QuizViewModel : ViewModel() {
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                // Handle possible errors, maybe set a specific state or log an error
+                Log.d(TAG, "onCancelled: ${databaseError.message}")
             }
         })
     }

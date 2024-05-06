@@ -6,6 +6,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
@@ -17,6 +18,7 @@ class LockService : Service() {
 
     private var devicePolicyManager: DevicePolicyManager? = null
     private var adminComponent: ComponentName? = null
+    private var timer: Timer? = null
 
     @SuppressLint("ForegroundServiceType")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -37,7 +39,7 @@ class LockService : Service() {
 
             override fun run() {
                 // Check if 3 minutes have elapsed
-                if (System.currentTimeMillis() - startTime > 180000) {
+                if (System.currentTimeMillis() - startTime > 72000) {
                     timer.cancel()  // Stops the Timer
                     timer.purge()   // Removes all cancelled tasks from the timer's task queue
                     return
@@ -62,4 +64,17 @@ class LockService : Service() {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         return !powerManager.isInteractive
     }
+    fun unlockDeviceForTwoHours(context: Context) {
+        val unlockDuration = 2 * 60 * 60 * 1000 // 2 hours in milliseconds
+        val intent = Intent(context, LockService::class.java).apply {
+            putExtra("unlockDuration", unlockDuration)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+
+    }
+
 }

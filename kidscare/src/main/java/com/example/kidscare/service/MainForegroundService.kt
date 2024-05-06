@@ -4,6 +4,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.example.kidscare.R
 import com.example.kidscare.navigation.permission.appblocker.BlockedAppActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +24,17 @@ class MainForegroundService : Service() {
         val blockedAppPackageNames = intent?.getStringArrayListExtra(BLOCKED_APP_PACKAGES_EXTRA) ?: listOf()
         Log.d("AppBlockerService", "Blocked apps: $blockedAppPackageNames")
         startAppBlocking()
+            // Create a notification
+            val notification = NotificationCompat.Builder(this, 123.toString())
+                .setContentTitle("My Foreground Service")
+                .setContentText("This service is running in the foreground")
+                .setSmallIcon(R.drawable.kides_care)
+                .build()
+
+            // Start the service in the foreground
+            startForeground(1, notification)
+
+
         return START_STICKY
     }
 

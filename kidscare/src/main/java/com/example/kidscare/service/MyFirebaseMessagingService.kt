@@ -36,6 +36,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(channelId, notification)
         return notification
     }
+    fun showNotificationDevice(context: Context, message: String?): Notification {
+        createNotificationChannel(context)
+        return createNotification(context, message)
+    }
 
     private fun createNotificationChannel(context: Context,) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
