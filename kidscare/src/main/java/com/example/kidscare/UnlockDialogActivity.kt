@@ -271,14 +271,12 @@ fun FeedbackDialog(message: String, onDismiss: () -> Unit) {
 }
 
 fun lockDeviceForTwoHours(context: Context) {
-//    val lockService =LockService()
-//    lockService.unlockDeviceForTwoHours(context)
     val serviceIntent = Intent(context, LockService::class.java)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        ContextCompat.startForegroundService(context, serviceIntent)
-    } else {
-        context.startService(serviceIntent)
-    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(context, serviceIntent)
+        } else {
+            context.startService(serviceIntent)
+        }
 }
 fun isDeviceAdminActive(context: Context): Boolean {
     val devicePolicyManager = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager

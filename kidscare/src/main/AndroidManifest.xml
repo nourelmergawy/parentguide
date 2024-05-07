@@ -41,6 +41,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.NOTE_OP" />
+    <uses-permission  android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="true"
@@ -102,7 +104,8 @@
         <service
             android:name=".navigation.permission.lockdevice.LockService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" /> <!-- Firebase Messaging Service -->
+            android:foregroundServiceType="dataSync">
+        </service>
         <service
             android:name=".service.MyFirebaseMessagingService"
             android:exported="false"> <!-- Typically this should not be accessible to other apps unless specifically required -->
@@ -129,6 +132,17 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".service.MyDeviceAdminReceiver"
+            android:exported="false"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
     </application>
