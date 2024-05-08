@@ -1,5 +1,7 @@
 package com.example.kidscare
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.ActivityManager
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
@@ -42,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
@@ -58,6 +61,11 @@ class UnlockDialogActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (isActivityDisabled()) {
+            Toast.makeText(this, "This activity is disabled for 2 hours.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
         setContent {
             val showDialog = remember { mutableStateOf(true) }
@@ -81,13 +89,30 @@ class UnlockDialogActivity : AppCompatActivity() {
 
             scenarioData?.let { scenario ->
                 Log.d(TAG, "onCreate: $scenario")
-                Column (){
-                    AsyncImage(
-                        model = R.drawable.senario2,
-                        contentDescription = "App permissions ",
-                        modifier = Modifier
-                            .fillMaxSize()
+                Column {
+                    val drawableList = listOf(
+                        R.drawable.senario1,  // Assume these are valid drawable resources
+                        R.drawable.senario2,
+                        R.drawable.senario3
                     )
+
+                    // Safe access to drawable list, adjust indices appropriately
+                    val imageIndex = when(scenario.get(0).title){
+                        " Suspicious Text Message" -> 0
+                        "Suspicious Link" -> 1
+                        else -> 2
+                    }
+                    AsyncImage(
+                        model = if (drawableList[imageIndex] != null) {
+                            drawableList[imageIndex]
+                        }else {
+                            R.drawable.senario1
+                        }
+                        ,  // Use imageIndex safely
+                        contentDescription = "App permissions",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
                     if (showDialog.value) {
                         BottomDialog(
                             showDialog = showDialog.value,
@@ -99,13 +124,19 @@ class UnlockDialogActivity : AppCompatActivity() {
                             }
                         )
                     } else if (showInteractiveScenario.value) {
-                        InteractiveScenario()
+                        InteractiveScenarios(scenarios = scenario)
+
                     }
-                }
+
 
             } ?: Text("Loading...")
 
         }
+    }
+    private fun isActivityDisabled(): Boolean {
+        val sharedPreferences = getSharedPreferences("UnlockDialogActivity", Context.MODE_PRIVATE)
+        val disableUntil = sharedPreferences.getLong("disableUntil", 0)
+        return System.currentTimeMillis() < disableUntil
     }
 
 }
@@ -123,6 +154,7 @@ fun BottomDialog(
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             ) {
                 MainDialog(scenario.get(0), onDialogComplete)
+
             }
         }
     }
@@ -138,138 +170,193 @@ fun MainDialog(scenarios: Scenario, onDialogComplete: () -> Unit) {
         onDialogComplete()
         return  // Exit the Composable when the dialog is not shown
     }
+            Column {
+                Dialog(onDismissRequest = { showDialog = false }) {
+                    Column(modifier = Modifier
+                        .padding(16.dp)
+                        .background(Color.White)) {
+                        Text(scenarios.title, )
 
-    Dialog(onDismissRequest = { showDialog = false }) {
-            Column(modifier = Modifier.padding(16.dp)
-                .background(Color.White)) {
-                Text(scenarios.title, )
+                        // Display the content based on the current stage
+                        when (stage) {
+                            0 -> Text(
+                                text = scenarios.content,
 
-                // Display the content based on the current stage
-                when (stage) {
-                    0 -> Text(
-                        text = scenarios.content,
+                                )
 
-                    )
+                            1 -> scenarios.answers.forEach { answer ->
+                                Text(text = answer, )
+                            }
 
-                    1 -> scenarios.answers.forEach { answer ->
-                        Text(text = answer, )
+                            2 -> Text(
+                                text = scenarios.recommended,
+
+                                color = Color.Green
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(onClick = {
+                            if (stage < 2) {
+                                stage++  // Move to the next stage of the current scenario
+                            } else {
+
+                                showDialog = false  // Close the dialog after the last scenario
+                            }
+                        }) {
+                            Text("Next",)
+                        }
+
                     }
-
-                    2 -> Text(
-                        text = scenarios.recommended,
-
-                        color = Color.Green
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(onClick = {
-                    if (stage < 2) {
-                        stage++  // Move to the next stage of the current scenario
-                    } else {
-
-                            showDialog = false  // Close the dialog after the last scenario
-                    }
-                }) {
-                    Text("Next",)
                 }
 
             }
+
         }
-    }
 @Composable
-fun InteractiveScenario() {
-    var selectedOption by remember { mutableStateOf("") }
+fun InteractiveScenarios(scenarios: List<Scenario>) {
+    var currentScenarioIndex by remember { mutableStateOf(0) }
     var showDialog by remember { mutableStateOf(true) }
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var showMainDialog by remember { mutableStateOf(false) }
     var feedbackMessage by remember { mutableStateOf("") }
-    val context =  LocalContext.current
-    if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
-            Column(modifier = Modifier.padding(16.dp).background(Color.White)) {
-                Text(
-                    "What would you do if you received a suspicious link?",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        onClick = {
-                            selectedOption = "Click on link"
-                            feedbackMessage = "Incorrect action. Do not click on suspicious links!"
-                            showFeedbackDialog = true
-                            val serviceIntent = Intent(context, LockService::class.java)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                ContextCompat.startForegroundService(context, serviceIntent)
-                            } else {
-                                context.startService(serviceIntent)
-                            }
+    val context = LocalContext.current
 
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                    ) {
-                        Text(text = "Click on link")
-                    }
-                    Button(
-                        onClick = {
-                            selectedOption = "Ignore the link"
-                            feedbackMessage = "Correct! Always ignore suspicious links."
-                            showFeedbackDialog = true
-                            if (isDeviceAdminActive(context)) {
-                                lockDeviceForTwoHours(context)
-                            } else {
-                                Toast.makeText(context, "Device admin not enabled", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-                    ) {
-                        Text(text = "Ignore the link")
-                    }
-                }
-                if (selectedOption.isNotEmpty()) {
-                    Text("You selected: $selectedOption", style = MaterialTheme.typography.bodyMedium)
-                }
+    // Function to handle feedback and determine the next steps
+    fun handleFeedback(isCorrect: Boolean) {
+        if (isCorrect) {
+            feedbackMessage = "Correct! "
+            showDialog = false  // Dismiss the initial dialog when the action is correct
+        } else {
+            feedbackMessage = "Incorrect action. "
+            if (currentScenarioIndex < scenarios.size - 1) {
+                currentScenarioIndex++  // Move to the next scenario if incorrect
             }
+        }
+        showFeedbackDialog = true
+    }
+
+    // Interactive scenario dialog
+    if (showDialog && scenarios.isNotEmpty()) {
+        val currentScenario = scenarios[currentScenarioIndex]
+        Dialog(
+            onDismissRequest = { showDialog = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false  // This allows more control over the Dialog styling
+            )
+        ) {
+            // The outermost container with a transparent background
+            Surface(
+                modifier = Modifier
+
+                    .background(Color.Transparent),  // Set Surface background to transparent
+                color = Color.Transparent,  // Ensure the surface itself is transparent
+                shape = RoundedCornerShape(0.dp)  // Optional: you can set the corner shape if needed
+            ) {
+                // Content inside the dialog
+                ScenarioDialogContent(currentScenario, onPositiveClick = {
+                    handleFeedback(false)
+                    showMainDialog = true  // Prepare to show MainDialog
+                }, onNegativeClick = {
+                    handleFeedback(true)
+                })
+            }
+        }
+
+    }
+
+    // Feedback dialog for results of user's actions
+    if (showFeedbackDialog) {
+        Dialog(onDismissRequest = { showFeedbackDialog = false }) {
+            FeedbackDialogContent(feedbackMessage, onDismiss = {
+                showFeedbackDialog = false
+                if (feedbackMessage.startsWith("Incorrect")) {
+                    showMainDialog = true  // Show MainDialog if the action was incorrect
+                }
+            })
         }
     }
 
-    if (showFeedbackDialog) {
-        FeedbackDialog(
-            message = feedbackMessage,
-            onDismiss = {
-                showFeedbackDialog = false
-                showDialog = false // Optionally close the main dialog
-                if (selectedOption == "Ignore the link") {
-                    // Unlock the device for 2 hours
-                    lockDeviceForTwoHours(context)
-                }
+    // Main dialog showing more details or actions
+    if (showMainDialog) {
+        Column {
+
+            // Ensure we do not exceed the bounds of drawableList and scenarios
+            if (currentScenarioIndex < scenarios.size) {
+                // Display the main dialog with the current scenario
+
+                MainDialog(scenarios[currentScenarioIndex], onDialogComplete = {
+                    showMainDialog = false  // Hide MainDialog once completed
+                })
             }
-        )
+        }
+    } else if (currentScenarioIndex >= scenarios.size) {
+        // Correct condition to avoid incorrect scenario indexing
+        showMainDialog = false
     }
 }
 
 @Composable
-fun FeedbackDialog(message: String, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = { onDismiss() }) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .background(Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(message, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { onDismiss() }) {
-                Text("OK")
+fun ScenarioDialogContent(scenario: Scenario, onPositiveClick: () -> Unit, onNegativeClick: () -> Unit) {
+    val context = LocalContext.current
+    Column(modifier = Modifier
+        .padding(16.dp)
+
+        , verticalArrangement = Arrangement.Bottom) {
+        Text(scenario.content, style = MaterialTheme.typography.bodyMedium, color = Color.White)
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(onClick = onPositiveClick, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                Text(text = when (scenario.title) {
+                    " Suspicious Text Message" -> "Click on the text message"
+                    "Suspicious Link" -> "Click on the link"
+                    else -> "Click on the link"
+                }
+                )
+            }
+            Button(onClick = { onNegativeClick
+                disableActivityForTwoHours(context)
+            }, colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                Text(text = when (scenario.title) {
+                    " Suspicious Text Message" -> "Ignore the text message"
+                    "Suspicious Link" -> "Ignore the link"
+                    else -> "Ignore the link"
+                }
+                )
             }
         }
     }
 }
 
+@Composable
+fun FeedbackDialogContent(feedbackMessage: String, onDismiss: () -> Unit) {
+    Column(modifier = Modifier
+        .padding(16.dp)
+        .background(Color.White)) {
+        Text(feedbackMessage, style = MaterialTheme.typography.bodyMedium)
+        Button(onClick = onDismiss) {
+            Text("OK")
+        }
+    }
+}
+
+
+
+fun disableActivityForTwoHours(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("UnlockDialogActivity", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
+    val disableUntil = System.currentTimeMillis() + 2 * 60 * 60 * 1000 // 2 hours in milliseconds
+    editor.putLong("disableUntil", disableUntil)
+    editor.apply()
+
+    // Optionally finish the activity and show a toast
+    if (context is Activity) {
+        Toast.makeText(context, "You cannot use this activity for 2 hours.", Toast.LENGTH_LONG).show()
+        context.finish()
+    }
+}
+@SuppressLint("SuspiciousIndentation")
 fun lockDeviceForTwoHours(context: Context) {
     val serviceIntent = Intent(context, LockService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
