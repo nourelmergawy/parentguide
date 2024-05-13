@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -102,7 +103,7 @@ fun kidItem(kidData: KidData,homeViewModel: HomeViewModel, navController: NavHos
     val coins = remember { mutableStateOf(TextFieldValue()) }
     val context = LocalContext.current
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(color = Color(0xFFBACAE7)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -129,7 +130,7 @@ fun kidItem(kidData: KidData,homeViewModel: HomeViewModel, navController: NavHos
                 fontWeight = FontWeight.SemiBold
             )
         }
-        Button(modifier = Modifier.background(Color.Red),
+        Button(colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
             onClick = {
                 homeViewModel.deleteItemFromFirebase(kidData.uid.toString()!!,context)
                 navController.navigate(Screens.Home.screen)
@@ -142,7 +143,7 @@ fun kidItem(kidData: KidData,homeViewModel: HomeViewModel, navController: NavHos
             onValueChange = { coins.value = it },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
-        Button(modifier = Modifier.background(Color.Green),
+        Button(colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
             onClick = {
                 homeViewModel.addKidCoins(coins.value.text.toInt(), kidData.uid.toString()!!,context)
             }) {

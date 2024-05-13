@@ -51,7 +51,7 @@ class LockService : Service() {
 
             override fun run() {
                 // Check if 3 minutes have elapsed
-                if (System.currentTimeMillis() - startTime > 3600000) {
+                if (System.currentTimeMillis() - startTime > 300000) {
                     timer.cancel()  // Stops the Timer
                     timer.purge()   // Removes all cancelled tasks from the timer's task queue
                     return

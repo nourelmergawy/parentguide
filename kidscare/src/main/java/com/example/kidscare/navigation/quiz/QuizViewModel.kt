@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,6 +16,7 @@ import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.Models.QuizScore
 import com.example.kidscare.navigation.permission.lockdevice.LockService
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -202,5 +204,51 @@ class QuizViewModel : ViewModel() {
     }
     fun lockDeviceNotification(context: Context,notificationText:String?){
         myFirebaseMessagingService.showNotification(context,notificationText)
+    }
+
+    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
+
+    fun addKidCoins(coins :Int?,kidId: String,context:Context){
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        //    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
+        val kidRef =   dbRef.child(uid).child("kidsUsers").child(kidId)
+        // Update the totalCoins field
+        // Listener to read the totalCoins value
+        kidRef.child("totalCoins").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Get the totalCoins value
+                val totalCoins = dataSnapshot.value as Long
+                // Invoke the callback with the totalCoins value
+                var newTotalCoins = totalCoins!! + coins!!
+                Log.d(TAG, "newTotalCoins:$totalCoins ")
+                updateCoins(newTotalCoins,kidId,context)
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Handle any errors
+                Log.d("Error getting totalCoins value:", "${databaseError.toException()} ")
+            }
+        })
+    }
+    fun updateCoins(coins: Long, kidId: String, context:Context){
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        //    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
+        val kidRef =   dbRef.child(uid).child("kidsUsers").child(kidId)
+        kidRef.child("totalCoins").setValue(coins).addOnSuccessListener(
+            object :ValueEventListener, OnSuccessListener<Void> {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                }
+
+                override fun onSuccess(p0: Void?) {
+
+                    Toast.makeText(context, "coins added successfully", Toast.LENGTH_LONG).show()
+                }
+
+            }
+        )
     }
 }

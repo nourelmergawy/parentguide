@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +58,7 @@ import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
 
 @Composable
-fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavController,notificationsViewModel: NotificationsViewModel) {
+fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavController, notificationsViewModel: NotificationsViewModel) {
     Log.d(TAG, "getKidData: ${KidDataRepository.getKidData()}")
 
     val kidData: KidData? = KidDataRepository.getKidData()
@@ -88,7 +89,7 @@ fun QuizScreen(quizViewModel: QuizViewModel, quizId:String, navController: NavCo
 fun QuizContent(
     quizData: QuizData?, kidData: KidData, context: Context,
     navController: NavController,
-    quizViewModel:QuizViewModel,
+    quizViewModel: QuizViewModel,
     quizId:String,
     quizScore: QuizScore?
 ) {
@@ -123,7 +124,7 @@ fun QuizContent(
                                 contentDescription = "Quiz image",
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp), // Define a height for the image
+                                    .wrapContentHeight(), // Define a height for the image
                                 contentScale = ContentScale.Crop
                             )
                         }
@@ -152,7 +153,8 @@ fun QuizContent(
                                     navController = navController,
                                     quizViewModel = quizViewModel,
                                     quizId = quizId,
-                                    quizScore = quizScore
+                                    quizScore = quizScore,
+                                    kidID = kidData.uid
                                 )
                             }
                         }
@@ -193,23 +195,40 @@ fun TopBar(score: Long, level: Int) {
                 text = score.toString(),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.BottomCenter),
-                color = Color.White,// Centers the text in the Box, on top of the icon
-                fontSize = 16.sp
+                color = Color.Black,// Centers the text in the Box, on top of the icon
+                fontSize = 32.sp
             )
         }
 }
 
 @Composable
-fun OptionButton(option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit,navController: NavController,quizViewModel :QuizViewModel,quizId: String,quizScore: QuizScore) {
+fun OptionButton(
+    option: String, isSelected: Boolean, correctAnswer: String, onSelectOption: (String) -> Unit,
+    navController: NavController,
+    quizViewModel: QuizViewModel,
+    quizId: String,
+    quizScore: QuizScore,
+    kidID: String?
+) {
+    val context = LocalContext.current
     Log.d(TAG, "OptionButton: ${correctAnswer}")
     Log.d(TAG, "OptionButton: ${option}")
 
     val backgroundColor =when{
 
-        isSelected && option == correctAnswer -> {OpenDialogWithNavigation(navController,true,quizViewModel,quizId,quizScore)
+        isSelected && option == correctAnswer -> {OpenDialogWithNavigation(navController,true,quizViewModel,quizId,quizScore,kidID)
+            quizViewModel.addKidCoins(kidId = kidID!!,
+                coins = when(quizScore.tryCount){
+                    0 -> 100
+                    1 -> 50
+                    2 -> 30
+                    null -> 100
+                    else -> 0
+                },context = context)
+            navController.navigate(Screens.KidHome.screen)
             Color.Green}
         isSelected && option != correctAnswer -> {
-            OpenDialogWithNavigation(navController, false,quizViewModel,quizId,quizScore)
+            OpenDialogWithNavigation(navController, false, quizViewModel, quizId, quizScore, kidID)
             Color.Red
         }
         else -> Color.White
@@ -250,7 +269,14 @@ fun lotteQuizAnimation(answer :Boolean){
 
 }
 @Composable
-fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizViewModel :QuizViewModel,quizId: String,quizScore: QuizScore) {
+fun OpenDialogWithNavigation(
+    navController: NavController,
+    answer: Boolean,
+    quizViewModel: QuizViewModel,
+    quizId: String,
+    quizScore: QuizScore,
+    kidID: String?
+) {
     var showDialog by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
@@ -258,7 +284,8 @@ fun OpenDialogWithNavigation(navController: NavController, answer: Boolean,quizV
         Dialog(onDismissRequest = {
             if (answer) {
                 showDialog = false
-                navController.navigate(Screens.KidHome.screen)
+
+
             } else {
                 showDialog = false
             }

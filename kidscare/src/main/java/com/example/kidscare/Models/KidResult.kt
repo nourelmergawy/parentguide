@@ -16,11 +16,18 @@ data class KidData(
     val gender:String ? = null,
     val totalCoins: Int?= null,
     val quizzes: List<QuizScore>?= null,
+    val scenarios : List<ScenarioScore>? = null
     ){
     // Add a no-argument constructor
     constructor() : this("", "0000") // Default values can be used if needed
 }
 data class QuizScore(
+    var score : Int? = 0,
+    var tryCount :Int? = 0,
+    var hasSolved : String ? = null,
+)
+
+data class ScenarioScore(
     var score : Int? = 0,
     var tryCount :Int? = 0,
     var hasSolved : String ? = null,

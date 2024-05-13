@@ -346,7 +346,9 @@ fun FeedbackDialogContent(feedbackMessage: String, onDismiss: () -> Unit) {
 fun disableActivityForTwoHours(context: Context) {
     val sharedPreferences = context.getSharedPreferences("UnlockDialogActivity", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
-    val disableUntil = System.currentTimeMillis() + 2 * 60 * 60 * 1000 // 2 hours in milliseconds
+    val disableUntil = System.currentTimeMillis() + 60 * 1000// 2 hours in milliseconds
+//            2 * 60 * 60 * 1000
+
     editor.putLong("disableUntil", disableUntil)
     editor.apply()
 

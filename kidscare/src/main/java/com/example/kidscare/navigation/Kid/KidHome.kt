@@ -18,20 +18,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -52,11 +55,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
+fun homeKidScreen(quizViewModel : QuizViewModel, navController : NavController){
     val quizData by quizViewModel._quizzes.observeAsState(initial = null)
 
     LaunchedEffect(true) {
         quizViewModel.loadAllQuiz()
+
     }
     quizData?.let { quiz ->
         Log.d(ContentValues.TAG, "quizData: ${quizData}")
@@ -64,7 +68,8 @@ fun homeKidScreen(quizViewModel : QuizViewModel,navController : NavController){
             .background(Color(0xffCDFFF0))
             .fillMaxSize()){
             item {
-                HorizontalLazyColumn(quiz,quizViewModel,navController)
+                HorizontalLazyColumn(quizzes = quiz.subList(3,12),quizViewModel,navController)
+                ScenariosHorizontalLazyColumn(quiz.subList(0,3),quizViewModel,navController)
                 appPermissions(navController)
                 StoreCard()
             }}
@@ -162,6 +167,96 @@ fun HorizontalLazyColumn(
                 }
             }
         }
+
+
+@SuppressLint("SuspiciousIndentation")
+@Composable
+fun ScenariosHorizontalLazyColumn(
+    quizzes: List<QuizData>?,
+    quizViewModel: QuizViewModel,
+    navController: NavController
+) {
+    val context = LocalContext.current
+//    Log.d(ContentValues.TAG, "HorizontalLazyColumn: ${quizzes}")
+
+    Column (modifier = Modifier
+        .background(Color(0xFFBBF1E7))
+        .fillMaxSize()){
+
+        Text(text = "Interactive Images",
+            fontSize =32.sp,
+            color = Color(0xff1B2B48),
+            textAlign = TextAlign.Left,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp))
+
+        LazyRow(modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .background(Color(0xFFBBF1E7))
+        )
+        {
+            items(quizzes!!.size) {item ->
+
+                Card(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .height(300.dp)
+                        .padding(8.dp)
+                        .background(Color(0xFFBBF1E7 )),
+                    shape = RoundedCornerShape(16.dp),
+                    onClick = {
+                        Log.d(TAG, "HorizontalLazyColumn: ${item}")
+
+                        GlobalScope.launch(Dispatchers.Main) {
+                            Log.d(TAG, "HorizontalLazyColumn: ${quizViewModel.isQuizSolved(item.toString())}")
+
+                            when (quizViewModel.isQuizSolved(item.toString())) {
+                                "solved" -> {
+                                    Toast.makeText(
+                                        context,
+                                        "You have already solved this quiz",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                "wrongAnswer", "notSolved" -> {
+                                    navController.navigate("kidquiz/${item}")
+                                }
+                            }
+                        }
+                    }
+
+                    // For more complex coloring, consider using Card's contentColor and other properties
+                ) {
+                    Column (modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xffAEFFEB))
+                        .padding(16.dp)){
+
+                        quizzes.get(item).image?.let {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = "Quiz image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp), // Define a height for the image
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Text(
+                            text = quizzes!!.get(item).question,
+                            textAlign = TextAlign.Center,
+                            color = Color.Black,
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun appPermissions (navController:NavController){
@@ -262,6 +357,8 @@ fun StoreCard() {
                     .fillMaxWidth()
                     .padding(8.dp)
             ) {
+                var showDialog by remember { mutableStateOf(false) }
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -306,13 +403,27 @@ fun StoreCard() {
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { /* TODO: Handle buy action */ },
+                            onClick = { showDialog = true},
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003D31)),
                             contentPadding = PaddingValues(horizontal = 32.dp)
                         ) {
                             Text(
                                 text = "Buy",
                                 fontSize = 18.sp
+                            )
+                        }
+
+                        // Dialog that will show when the button is clicked
+                        if (showDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDialog = false },
+                                title = { Text(text = "Purchase Successful", style = MaterialTheme.typography.bodyMedium) },
+                                text = { Text(text = "This item has been successfully bought.") },
+                                confirmButton = {
+                                    Button(onClick = { showDialog = false }) {
+                                        Text("OK")
+                                    }
+                                }
                             )
                         }
                     }
