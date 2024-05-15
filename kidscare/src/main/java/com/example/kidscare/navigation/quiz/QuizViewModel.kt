@@ -36,19 +36,25 @@ class QuizViewModel : ViewModel() {
     private var databaseReference: DatabaseReference =
         FirebaseDatabase.getInstance().getReference("quizzes")
     private var _quiz = MutableLiveData<QuizData?>()  // Allow nullability for the initial value
-    private var _quizScore = MutableLiveData<QuizScore?>()  // Allow nullability for the initial value
-
+    private var _quizScore =
+        MutableLiveData<QuizScore?>()  // Allow nullability for the initial value
+    private var _coins =
+        MutableLiveData<Long?>()
     val _quizzes = MutableLiveData<List<QuizData>?>()
     private val userDBRef = FirebaseDatabase.getInstance().getReference("users")
 
     val quiz: LiveData<QuizData?> get() = _quiz
+    val coins: LiveData<Long?> get() = _coins
+
     val quizzes: MutableLiveData<List<QuizData>?> get() = _quizzes
-    val quizScore : LiveData<QuizScore?> get ()= _quizScore
+    val quizScore: LiveData<QuizScore?> get() = _quizScore
+
     init {
         // Optionally preload data or set an initial state
         _quiz.value = null
         _quizzes.value = null
         _quizScore.value = null
+        _coins.value = null
     }
 
     fun loadAllQuiz(): MutableLiveData<List<QuizData>?> {
@@ -92,6 +98,7 @@ class QuizViewModel : ViewModel() {
             context.startService(serviceIntent)
         }
     }
+
     suspend fun getQuizScore(quizId: String?) {
         try {
             val solvedStatus = isQuizSolved(quizId)
@@ -99,6 +106,7 @@ class QuizViewModel : ViewModel() {
                 "notSolved" -> {
                     _quizScore.value = QuizScore(0, 0, "notSolved")
                 }
+
                 "solved", "wrongAnswer" -> {
                     val kidData = KidDataRepository.getKidData()
                     val quiz = kidData?.quizzes?.get(quizId?.toIntOrNull() ?: -1)
@@ -109,6 +117,7 @@ class QuizViewModel : ViewModel() {
                         _quizScore.value = QuizScore(0, 0, "notSolved")
                     }
                 }
+
                 else -> {
                     // Handle other cases
                     _quizScore.value = QuizScore(0, 0, "notSolved")
@@ -119,6 +128,7 @@ class QuizViewModel : ViewModel() {
             _quizScore.value = QuizScore(0, 0, "notSolved")
         }
     }
+
     // Define a suspend function to fetch quiz solved status
     suspend fun isQuizSolved(quizId: String?): String = withContext(Dispatchers.IO) {
         val user = FirebaseAuth.getInstance().currentUser
@@ -141,7 +151,10 @@ class QuizViewModel : ViewModel() {
                         Log.d("QuizViewModel", "User has quiz ID $quizId and it is solved")
                         "solved"
                     } else {
-                        Log.d("QuizViewModel", "User has quiz ID $quizId but it has wrong answers or not attempted")
+                        Log.d(
+                            "QuizViewModel",
+                            "User has quiz ID $quizId but it has wrong answers or not attempted"
+                        )
                         "wrongAnswer"
                     }
 
@@ -151,7 +164,11 @@ class QuizViewModel : ViewModel() {
 
 
                 override fun onCancelled(databaseError: DatabaseError) {
-                    Log.d("QuizViewModel", "Error checking quizzes for user", databaseError.toException())
+                    Log.d(
+                        "QuizViewModel",
+                        "Error checking quizzes for user",
+                        databaseError.toException()
+                    )
                     quizSolved = "Error"
                     // Resume the coroutine with an exception
                     continuation.resumeWithException(databaseError.toException())
@@ -166,7 +183,9 @@ class QuizViewModel : ViewModel() {
             val uid = user?.uid
             val kidData: KidData? = KidDataRepository.getKidData()
             val getKidId: String? = kidData?.uid
-            val userKidsRef: DatabaseReference = userDBRef.child(uid.toString()).child("kidsUsers").child(getKidId!!).child("quizzes")
+            val userKidsRef: DatabaseReference =
+                userDBRef.child(uid.toString()).child("kidsUsers").child(getKidId!!)
+                    .child("quizzes")
             Log.d(TAG, "checkQuizAnswer: $getKidId")
 
             if (answer) {
@@ -177,6 +196,7 @@ class QuizViewModel : ViewModel() {
                         quizScore.hasSolved = "solved"
                         userKidsRef.child(quizId!!).setValue(quizScore).await()
                     }
+
                     "notSolved" -> {
                         quizScore.score = 10
                         quizScore.tryCount = 0
@@ -202,16 +222,17 @@ class QuizViewModel : ViewModel() {
             Log.e(TAG, "Error checking quiz answer: $e")
         }
     }
-    fun lockDeviceNotification(context: Context,notificationText:String?){
-        myFirebaseMessagingService.showNotification(context,notificationText)
+
+    fun lockDeviceNotification(context: Context, notificationText: String?) {
+        myFirebaseMessagingService.showNotification(context, notificationText)
     }
 
     private val dbRef = FirebaseDatabase.getInstance().getReference("users")
 
-    fun addKidCoins(coins :Int?,kidId: String,context:Context){
+    fun addKidCoins(coins: Int?, kidId: String, context: Context) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         //    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
-        val kidRef =   dbRef.child(uid).child("kidsUsers").child(kidId)
+        val kidRef = dbRef.child(uid).child("kidsUsers").child(kidId)
         // Update the totalCoins field
         // Listener to read the totalCoins value
         kidRef.child("totalCoins").addListenerForSingleValueEvent(object : ValueEventListener {
@@ -221,20 +242,22 @@ class QuizViewModel : ViewModel() {
                 // Invoke the callback with the totalCoins value
                 var newTotalCoins = totalCoins!! + coins!!
                 Log.d(TAG, "newTotalCoins:$totalCoins ")
-                updateCoins(newTotalCoins,kidId,context)
+                updateCoins(newTotalCoins, kidId, context)
             }
+
             override fun onCancelled(databaseError: DatabaseError) {
                 // Handle any errors
                 Log.d("Error getting totalCoins value:", "${databaseError.toException()} ")
             }
         })
     }
-    fun updateCoins(coins: Long, kidId: String, context:Context){
+
+    fun updateCoins(coins: Long, kidId: String, context: Context) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         //    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
-        val kidRef =   dbRef.child(uid).child("kidsUsers").child(kidId)
+        val kidRef = dbRef.child(uid).child("kidsUsers").child(kidId)
         kidRef.child("totalCoins").setValue(coins).addOnSuccessListener(
-            object :ValueEventListener, OnSuccessListener<Void> {
+            object : ValueEventListener, OnSuccessListener<Void> {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     TODO("Not yet implemented")
                 }
@@ -246,6 +269,32 @@ class QuizViewModel : ViewModel() {
                 override fun onSuccess(p0: Void?) {
 
                     Toast.makeText(context, "coins added successfully", Toast.LENGTH_LONG).show()
+                }
+
+            }
+        )
+    }
+
+    fun getCoins(kidId: String, context: Context) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        //    private val dbRef = FirebaseDatabase.getInstance().getReference("users")
+        val kidRef = dbRef.child(uid).child("kidsUsers").child(kidId)
+        kidRef.child("totalCoins").get().addOnSuccessListener(
+            object : ValueEventListener, OnSuccessListener<DataSnapshot> {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val coins = snapshot.getValue(Long::class.java)
+                    _coins.value = coins
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+
+                }
+
+                override fun onSuccess(p0: DataSnapshot?) {
+                    Log.d(TAG, "onSuccess: $p0")
+                    val coins = p0?.getValue(Long::class.java)
+                    _coins.value = coins
                 }
 
             }

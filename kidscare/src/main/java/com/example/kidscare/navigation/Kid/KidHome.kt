@@ -3,6 +3,7 @@ package com.example.kidscare.navigation.Kid
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -44,8 +45,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.kidscare.KidDataRepository
+import com.example.kidscare.Models.KidData
 import com.example.kidscare.Models.QuizData
 import com.example.kidscare.R
 import com.example.kidscare.navigation.Screens
@@ -53,32 +57,112 @@ import com.example.kidscare.navigation.quiz.QuizViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @Composable
 fun homeKidScreen(quizViewModel : QuizViewModel, navController : NavController){
     val quizData by quizViewModel._quizzes.observeAsState(initial = null)
+    val context = LocalContext.current
+    val kidData: KidData? = KidDataRepository.getKidData()
+    val coins by quizViewModel.coins.observeAsState(initial = null)
 
     LaunchedEffect(true) {
         quizViewModel.loadAllQuiz()
-
+        quizViewModel.getCoins(kidData?.uid!!,context)
     }
+    LazyColumn (modifier = Modifier
+        .background(Color(0xffCDFFF0))
+        .fillMaxSize()){
+        item {
+            coins?.let {
+                CoinsCard(item = it)
+            }?: run {
+                Text("Loading...")
+            }
     quizData?.let { quiz ->
         Log.d(ContentValues.TAG, "quizData: ${quizData}")
-        LazyColumn (modifier = Modifier
-            .background(Color(0xffCDFFF0))
-            .fillMaxSize()){
-            item {
                 HorizontalLazyColumn(quizzes = quiz.subList(3,12),quizViewModel,navController)
                 ScenariosHorizontalLazyColumn(quiz.subList(0,3),quizViewModel,navController)
-                appPermissions(navController)
-                StoreCard()
-            }}
-    } ?: run {
-        Text("Loading...")
+            }?: run {
+            Text("Loading...")
+        }
+        appPermissions(navController)
+        StoreCard(kidId = KidDataRepository.getKidData()!!.uid.toString()!!, context = context, quizViewModel = quizViewModel)
+    }
     }
 
-
 }
+
+@Composable
+fun CoinsCard(item: Long) {
+
+    Text(
+        text = "Coins",
+        fontSize = 31.sp,
+        modifier = Modifier.padding(8.dp),
+        color = Color(0xFF1B2B48)
+    )
+
+    Column(
+        modifier = Modifier
+            .background(Color(0xffAEFFEB))
+            .padding(8.dp)
+            .fillMaxWidth()
+    ) {
+
+        Card(
+            shape = RoundedCornerShape(43.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .background(Color(0xFFBBF1E7))
+                    .padding(8.dp)
+                    .fillMaxWidth()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.moneyjar),
+                    contentDescription = "Coins",
+                    modifier = Modifier
+                        .size(200.dp)
+                        .weight(1f)
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .weight(1f), horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Coins",
+                        fontSize = 50.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row {
+//                        Image(
+//                            painter = painterResource(id = R.drawable.img_coin),
+//                            contentDescription = null,
+//                            Modifier.size(75.dp)
+//                        )
+                        Text(
+                            text = item.toString(),
+                            fontSize = 50.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(
+                                top = 8.dp
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun HorizontalLazyColumn(
@@ -113,7 +197,7 @@ fun HorizontalLazyColumn(
                                 .width(300.dp)
                                 .height(300.dp)
                                 .padding(8.dp)
-                                .background(Color(0xFFBBF1E7 )),
+                                .background(Color(0xFFBBF1E7)),
                             shape = RoundedCornerShape(16.dp),
                             onClick = {
                                 Log.d(TAG, "HorizontalLazyColumn: ${item}")
@@ -183,7 +267,7 @@ fun ScenariosHorizontalLazyColumn(
         .background(Color(0xFFBBF1E7))
         .fillMaxSize()){
 
-        Text(text = "Interactive Images",
+        Text(text = "Ireal life scenarios ",
             fontSize =32.sp,
             color = Color(0xff1B2B48),
             textAlign = TextAlign.Left,
@@ -203,7 +287,7 @@ fun ScenariosHorizontalLazyColumn(
                         .width(300.dp)
                         .height(300.dp)
                         .padding(8.dp)
-                        .background(Color(0xFFBBF1E7 )),
+                        .background(Color(0xFFBBF1E7)),
                     shape = RoundedCornerShape(16.dp),
                     onClick = {
                         Log.d(TAG, "HorizontalLazyColumn: ${item}")
@@ -333,10 +417,8 @@ fun appPermissions (navController:NavController){
     }
 }
 
-
-
 @Composable
-fun StoreCard() {
+fun StoreCard(context: Context,kidId: String,quizViewModel:QuizViewModel) {
     Text(
         text = "Store",
         fontSize = 31.sp,
@@ -403,7 +485,9 @@ fun StoreCard() {
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { showDialog = true},
+
+                            onClick = {
+                                showDialog = true},
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003D31)),
                             contentPadding = PaddingValues(horizontal = 32.dp)
                         ) {
@@ -415,10 +499,24 @@ fun StoreCard() {
 
                         // Dialog that will show when the button is clicked
                         if (showDialog) {
+
                             AlertDialog(
                                 onDismissRequest = { showDialog = false },
-                                title = { Text(text = "Purchase Successful", style = MaterialTheme.typography.bodyMedium) },
-                                text = { Text(text = "This item has been successfully bought.") },
+                                title = {
+                                    Text(text =
+                                    if (checkPrice(
+                                            coins = quizViewModel.coins,
+                                            price = 300, quizViewModel = quizViewModel, kidId = kidId, context = context)){
+                                    "Purchase Successful"
+                                }else{ "Purchase faild"}
+                                        , style = MaterialTheme.typography.bodyMedium) },
+                                text = { Text(text =
+                                if (checkPrice(
+                                        coins = quizViewModel.coins,
+                                        price = 300, quizViewModel = quizViewModel, kidId = kidId, context = context)){
+                                    "This item has been successfully bought."
+                                }else{ "You don't have enough coins to buy this item."}
+                                ) },
                                 confirmButton = {
                                     Button(onClick = { showDialog = false }) {
                                         Text("OK")
@@ -430,7 +528,21 @@ fun StoreCard() {
 
                 }
             }
-
-
         }
     }
+fun checkPrice(
+    coins: LiveData<Long?>,
+    price: Long,
+    quizViewModel: QuizViewModel,
+    kidId: String,
+    context: Context
+): Boolean {
+    coins.value?.let { currentCoins ->
+        Log.d(TAG, "checkPrice: $currentCoins")
+        if (currentCoins >= price) {
+            quizViewModel.addKidCoins(-price.toInt(), kidId, context)  // Deducting the price from the coins
+            return true
+        }
+    }
+    return false
+}
